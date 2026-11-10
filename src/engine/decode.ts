@@ -51,10 +51,11 @@ async function animation(bytes: Uint8Array, type: string, gamut: Gamut): Promise
   await decoder.completed; // all data is in, so the frame count is final
   const track = decoder.tracks.selectedTrack;
   if (!track) throw new Error('No image track');
-  const { image: first } = await decoder.decode({ frameIndex: 0 });
-  const width = first.displayWidth;
-  const height = first.displayHeight;
-  first.close();
+  // The first frame is decoded once and kept: it gives the size, and Firefox hands back an unusable
+  // frame when the same index is decoded a second time in a worker.
+  let held: VideoFrame | null = (await decoder.decode({ frameIndex: 0 })).image;
+  const width = held.displayWidth;
+  const height = held.displayHeight;
   return {
     width,
     height,
@@ -65,7 +66,8 @@ async function animation(bytes: Uint8Array, type: string, gamut: Gamut): Promise
     async *frames() {
       try {
         for (let frameIndex = 0; frameIndex < track.frameCount; frameIndex++) {
-          const { image } = await decoder.decode({ frameIndex });
+          const image: VideoFrame = held ?? (await decoder.decode({ frameIndex })).image;
+          held = null;
           try {
             yield { rgba: readPixels(image, width, height, gamut), delayMs: (image.duration ?? 0) / 1000 };
           } finally {

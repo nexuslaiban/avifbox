@@ -44,6 +44,7 @@ try {
     await page.locator('input[type=file]').first().setInputFiles(join(samples, recipe.source));
     const done = page.locator('.cv-list > li[data-status=done]');
     await done.waitFor();
+    if (recipe.choose.length > 0) await page.locator('details.cv-advanced summary').click();
     for (const label of recipe.choose) {
       await page.getByRole('radio', { name: label }).check();
       await done.waitFor();

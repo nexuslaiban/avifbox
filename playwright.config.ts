@@ -13,7 +13,11 @@ export default defineConfig({
     baseURL: `http://localhost:${PORT}`,
     trace: 'retain-on-failure',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    // Conversion only: page structure and accessibility do not depend on the engine.
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] }, testMatch: 'convert.spec.ts' },
+  ],
   webServer: {
     // --ignore-lock keeps the server in the foreground even when Astro detects a coding agent and
     // would otherwise detach it, which Playwright reads as the server exiting early.

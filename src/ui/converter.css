@@ -312,12 +312,24 @@
 
 .cv-advanced-body .cv-choice {
   border: 0;
-  border-right: 1px dashed var(--rule-soft);
+  border-bottom: 1px dashed var(--rule-soft);
   background: none;
+  padding-top: 0.9rem;
 }
 
 .cv-advanced-body .cv-choice:last-child {
-  border-right: 0;
+  border-bottom: 0;
+}
+
+@media (min-width: 52rem) {
+  .cv-advanced-body .cv-choice {
+    border-bottom: 0;
+    border-right: 1px dashed var(--rule-soft);
+  }
+
+  .cv-advanced-body .cv-choice:last-child {
+    border-right: 0;
+  }
 }
 
 /* ---------- notice ---------- */

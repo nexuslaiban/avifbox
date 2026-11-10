@@ -75,6 +75,12 @@ export async function settled(page: Page, count: number): Promise<void> {
   await expect(page.getByRole('list', { name: 'Files', exact: true }).locator('> li:not([data-status=done]):not([data-status=error])')).toHaveCount(0);
 }
 
+/** Opens the animation / HDR / colour-profile options, which start collapsed. */
+export async function openAdvanced(page: Page): Promise<void> {
+  const panel = page.locator('details.cv-advanced');
+  if (!(await panel.evaluate((element) => (element as HTMLDetailsElement).open))) await panel.locator('summary').click();
+}
+
 export interface Downloaded {
   name: string;
   bytes: Buffer;

@@ -9,6 +9,7 @@ import {
   fileRows,
   fixtureBytes,
   inflateSync,
+  openAdvanced,
   pasteFiles,
   pngChunks,
   pngColourType,
@@ -79,6 +80,8 @@ test.describe('AVIF to PNG', () => {
     const zip = zipEntries((await download(page, page.getByRole('button', { name: /Download all/ }))).bytes);
     expect(Object.keys(zip).sort()).toEqual(names.filter((n) => n !== 'anim-003.png'));
 
+    await expect(page.locator('details.cv-advanced summary')).toContainText('used by your files');
+    await openAdvanced(page);
     await page.getByRole('radio', { name: 'Animated PNG' }).check();
     await settled(page, 1);
     const apng = pngChunks(await downloadNamed(page, 'anim.png'));
@@ -107,6 +110,7 @@ test.describe('AVIF to PNG', () => {
     await addFiles(page, 'hdr-pq.avif');
     await settled(page, 1);
     await expect(fileRows(page).first()).toContainText('HDR');
+    await openAdvanced(page);
     await expect(page.getByRole('radio', { name: 'Keep brightness' })).toBeChecked();
 
     const brightness = readPng(await downloadNamed(page, 'hdr-pq.png'));
@@ -133,16 +137,25 @@ test.describe('AVIF to PNG', () => {
     expect(colour.at(x, y)).not.toEqual(brightness.at(x, y));
   });
 
-  test('AC-07 Display P3 output keeps the wide-gamut values and embeds the profile', async ({ page }) => {
+  test('AC-07 Display P3 output keeps the wide-gamut values and embeds the profile', async ({ page, browserName }) => {
     await addFiles(page, 'p3.avif');
     await settled(page, 1);
     const srgb = await downloadNamed(page, 'p3.png');
     expect(pngChunks(srgb).map((c) => c.type)).not.toContain('iCCP');
+
+    await openAdvanced(page);
+    const displayP3 = page.getByRole('radio', { name: 'Display P3' });
+    if (browserName === 'firefox') {
+      // Firefox cannot hold Display P3 pixels in a canvas; the option says so rather than mislabelling sRGB data.
+      await expect(displayP3).toBeDisabled();
+      await expect(page.getByText('cannot read images in Display P3')).toBeVisible();
+      return;
+    }
+    // Read as sRGB, the same colour needs more red than 200: P3 orange is outside what sRGB 200 means.
     const converted = readPng(srgb).at(8, 8);
     expect(converted).not.toEqual([200, 100, 50, 255]);
-    expect(converted[0]).toBeGreaterThan(200); // P3 orange is more saturated than sRGB can say with 200
-
-    await page.getByRole('radio', { name: 'Display P3' }).check();
+    expect(converted[0]).toBeGreaterThan(200);
+    await displayP3.check();
     await settled(page, 1);
     const p3 = await downloadNamed(page, 'p3.png');
     const iccp = pngChunks(p3).find((c) => c.type === 'iCCP')!;
@@ -170,7 +183,8 @@ test.describe('AVIF to PNG', () => {
     await settled(page, 50);
   });
 
-  test('AC-12 an image pasted from the clipboard is converted', async ({ page }) => {
+  test('AC-12 an image pasted from the clipboard is converted', async ({ page, browserName }) => {
+    test.skip(browserName === 'firefox', 'a scripted paste event cannot carry files in Firefox');
     await pasteFiles(page, 'still.avif');
     await settled(page, 1);
     expect(readPng(await downloadNamed(page, 'still.png')).data).toEqual(reference().data);

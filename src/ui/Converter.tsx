@@ -279,10 +279,8 @@ function Settings(props: { props: ConverterProps; state: State; capabilities: Ca
   const hasHdr = details.some((d) => d.info.hdr !== null);
   const hasWideGamut = details.some((d) => d.info.hdr !== null || WIDE_PRIMARIES.has(d.info.cicp?.primaries ?? 0));
   const hasJpegInput = details.some((d) => d.info.format === 'jpeg');
+  // Flagged, not opened: expanding it would push the results away from under the pointer.
   const relevant = hasAnimation || hasHdr || hasWideGamut;
-  useEffect(() => {
-    if (relevant) setAdvanced(true);
-  }, [relevant]);
 
   const isPng = options.target === 'png';
   const keepChoice = !isPng && (props.props.offerKeepJpeg || hasJpegInput);
