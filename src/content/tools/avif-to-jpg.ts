@@ -94,23 +94,28 @@ export const avifToJpg: ToolPage = {
     },
     {
       question: 'Is AVIF to JPEG the same as AVIF to JPG?',
-      answer: 'Yes. JPG and JPEG are two spellings of one format; .jpg is the three-letter extension that early versions of Windows required.',
+      answer:
+        'Yes. JPG and JPEG are two spellings of one format; .jpg is the three-letter extension that early versions of Windows required.',
     },
     {
       question: 'Will I lose quality converting AVIF to JPG?',
-      answer: 'A little, because JPG is lossy. At quality 90 the difference is hard to see. For a lossless copy, convert to PNG instead.',
+      answer:
+        'A little, because JPG is lossy. At quality 90 the difference is hard to see. For a lossless copy, convert to PNG instead.',
     },
     {
       question: 'What quality setting should I use?',
-      answer: '90 for photos you care about, 75–85 for web pages and email. Going above 95 mostly makes the file bigger.',
+      answer:
+        '90 for photos you care about, 75–85 for web pages and email. Going above 95 mostly makes the file bigger.',
     },
     {
       question: 'What happens to a transparent background?',
-      answer: 'It is filled with the background colour you choose — white by default — because JPG cannot store transparency.',
+      answer:
+        'It is filled with the background colour you choose — white by default — because JPG cannot store transparency.',
     },
     {
       question: 'Why is my JPG bigger than the AVIF?',
-      answer: 'AVIF compresses about twice as well as JPG, so some growth is normal. Lower the quality slider to trade size against detail.',
+      answer:
+        'AVIF compresses about twice as well as JPG, so some growth is normal. Lower the quality slider to trade size against detail.',
     },
     {
       question: 'Does the JPG keep the EXIF data?',

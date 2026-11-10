@@ -65,11 +65,14 @@ export interface Output {
 }
 
 export type ConvertEvent =
-  { type: 'info'; info: ImageInfo; frameCount: number; width: number; height: number; toneMapped: boolean } | { type: 'output'; output: Output };
+  | { type: 'info'; info: ImageInfo; frameCount: number; width: number; height: number; toneMapped: boolean }
+  | { type: 'output'; output: Output };
 
 export interface Capabilities {
   /** Canvas can hold Display P3 pixels. */
   p3: boolean;
   /** `ImageDecoder` is available, so animations can be read frame by frame. */
   frames: boolean;
+  /** Pixels read back from a canvas are the pixels put in. False when the browser adds anti-fingerprinting noise. */
+  exact: boolean;
 }

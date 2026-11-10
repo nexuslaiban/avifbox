@@ -10,7 +10,12 @@ export interface Decoders {
 }
 
 /** Chooses the decoder for a file and falls back when the first choice cannot handle it. */
-export async function openImage(bytes: Uint8Array, info: ImageInfo, options: ConvertOptions, decoders: Decoders): Promise<FrameSource> {
+export async function openImage(
+  bytes: Uint8Array,
+  info: ImageInfo,
+  options: ConvertOptions,
+  decoders: Decoders,
+): Promise<FrameSource> {
   if (info.hdr && !info.animated) {
     try {
       return await decoders.hdr(bytes, info, options);

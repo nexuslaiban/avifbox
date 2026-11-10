@@ -21,3 +21,12 @@ export function outputName(base: string, target: Target, position?: { frame: num
   const digits = Math.max(3, String(position.of).length);
   return `${base}-${String(position.frame + 1).padStart(digits, '0')}.${target}`;
 }
+
+/** Makes every name in the list distinct, as an archive needs: `a.png`, `a (2).png`… */
+export function uniqueNames(names: string[]): string[] {
+  const taken = new Set<string>();
+  return names.map((name) => {
+    const dot = name.lastIndexOf('.');
+    return uniqueStem(name.slice(0, dot), taken) + name.slice(dot);
+  });
+}

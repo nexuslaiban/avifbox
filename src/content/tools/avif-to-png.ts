@@ -93,20 +93,23 @@ export const avifToPng: ToolPage = {
   faq: [
     {
       question: 'How do I convert AVIF to PNG?',
-      answer: 'Drop your AVIF files on the box at the top of this page, or press Choose files. They convert at once; download each PNG, or a ZIP of them all.',
+      answer:
+        'Drop your AVIF files on the box at the top of this page, or press Choose files. They convert at once; download each PNG, or a ZIP of them all.',
     },
     {
       question: 'Why is the PNG so much bigger than the AVIF?',
-      answer: 'AVIF is lossy and PNG is not, so a photo commonly grows 5–20 times. Choose Optimized, or convert to JPG if you do not need transparency.',
+      answer:
+        'AVIF is lossy and PNG is not, so a photo commonly grows 5–20 times. Choose Optimized, or convert to JPG if you do not need transparency.',
     },
     {
       question: 'Does AVIF to PNG keep transparency?',
-      answer: 'Yes. The alpha channel is copied as it is, partly transparent pixels included, unless you tick Fill transparent areas.',
+      answer:
+        'Yes. The alpha channel is copied as it is, partly transparent pixels included, unless you tick Fill transparent areas.',
     },
     {
       question: 'Is the PNG I get actually lossless?',
       answer:
-        'PNG adds no loss: Truecolor stores exactly the pixels your browser decodes. Detail the AVIF discarded cannot return; 10- and 12-bit sources are rounded to 8-bit, and partly transparent pixels can shift by one level in 255.',
+        'PNG adds no loss: Truecolor stores the pixels your browser decodes. Detail the AVIF discarded cannot return, and 10- and 12-bit sources are rounded to 8-bit. Nearly transparent pixels keep their alpha, but their colour is stored less precisely — invisible once drawn.',
     },
     {
       question: 'Why will my AVIF file not open in Windows Photos or Photoshop?',
@@ -115,11 +118,13 @@ export const avifToPng: ToolPage = {
     },
     {
       question: 'Can I convert animated AVIF to PNG?',
-      answer: 'Yes. Every frame becomes a numbered PNG and you choose which to keep, or pick Animated PNG for one file that still moves.',
+      answer:
+        'Yes. Every frame becomes a numbered PNG and you choose which to keep, or pick Animated PNG for one file that still moves.',
     },
     {
       question: 'What about HDR and wide-colour AVIF?',
-      answer: 'HDR is tone-mapped to SDR — Keep brightness or Keep colour — and wide gamut can be kept as Display P3. Output is always 8-bit.',
+      answer:
+        'HDR is tone-mapped to SDR — Keep brightness or Keep colour — and wide gamut can be kept as Display P3. Output is always 8-bit.',
     },
     BATCH_FAQ,
     PRIVACY_FAQ,

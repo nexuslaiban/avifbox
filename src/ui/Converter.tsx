@@ -1,7 +1,8 @@
-import type { ComponentChildren } from 'preact';
+import type { ComponentChildren, RefObject } from 'preact';
 import { useEffect, useId, useMemo, useRef, useState } from 'preact/hooks';
 import { detectCapabilities, isSupportedBrowser } from '../engine/capabilities';
 import { MAX_FILES, MAX_FILE_BYTES } from '../engine/limits';
+import { uniqueNames } from '../engine/names';
 import { Pool } from '../engine/pool';
 import type { Capabilities, ConvertOptions, Target } from '../engine/types';
 import { formatBytes, sizeChange } from './format';
@@ -31,7 +32,16 @@ const MAX_MB = MAX_FILE_BYTES / (1024 * 1024);
 const ZIP_NAME = 'avifbox-images.zip';
 
 function initialOptions(target: Target): ConvertOptions {
-  return { target, pngMode: 'truecolor', quality: 90, background: null, animation: 'frames', tone: 'brightness', gamut: 'srgb', keepJpeg: true };
+  return {
+    target,
+    pngMode: 'truecolor',
+    quality: 90,
+    background: null,
+    animation: 'frames',
+    tone: 'brightness',
+    gamut: 'srgb',
+    keepJpeg: true,
+  };
 }
 
 function useStore(store: ConverterStore): State {
@@ -59,7 +69,10 @@ export default function Converter(props: ConverterProps) {
   const [supported, setSupported] = useState(true);
   const [dragging, setDragging] = useState(false);
   const [zipping, setZipping] = useState(false);
+  // Something the visitor asked for that could not be done; shown where notices go.
+  const [problem, setProblem] = useState<string | null>(null);
   const picker = useRef<HTMLInputElement>(null);
+  const chooser = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setSupported(isSupportedBrowser());
@@ -111,20 +124,37 @@ export default function Converter(props: ConverterProps) {
   }, [store]);
 
   const addSample = async (sample: Sample) => {
-    const response = await fetch(sample.url);
-    const name = sample.url.split('/').pop() ?? 'sample.avif';
-    store.add([new File([await response.blob()], name, { type: response.headers.get('content-type') ?? '' })]);
+    setProblem(null);
+    try {
+      const response = await fetch(sample.url);
+      if (!response.ok) throw new Error(String(response.status));
+      const name = sample.url.split('/').pop() ?? 'sample.avif';
+      store.add([new File([await response.blob()], name, { type: response.headers.get('content-type') ?? '' })]);
+    } catch {
+      setProblem('The sample could not be loaded. Check your connection and try again.');
+    }
   };
 
   const downloadAll = async () => {
     setZipping(true);
+    setProblem(null);
     try {
       const { downloadZip } = await import('client-zip');
-      const files = selectedOutputs(store.getState()).map((output) => ({ name: output.name, input: output.blob, lastModified: new Date() }));
+      const outputs = selectedOutputs(store.getState());
+      // A frame of one file can share its name with another file; inside an archive they must differ.
+      const names = uniqueNames(outputs.map((output) => output.name));
+      const files = outputs.map((output, i) => ({ name: names[i], input: output.blob, lastModified: new Date() }));
       saveAs(await downloadZip(files).blob(), ZIP_NAME);
+    } catch {
+      setProblem('The ZIP could not be built. Check your connection and try again, or download the files one by one.');
     } finally {
       setZipping(false);
     }
+  };
+
+  const clearAll = () => {
+    store.clear();
+    chooser.current?.focus(); // the button that was pressed is gone; do not drop keyboard users at the top of the page
   };
 
   const sum = totals(state);
@@ -136,7 +166,7 @@ export default function Converter(props: ConverterProps) {
         <p class="cv-drop-title">Drop {props.sourceLabel} files here</p>
         {supported ? (
           <p class="cv-drop-actions">
-            <button type="button" class="btn btn-primary" onClick={() => picker.current?.click()}>
+            <button ref={chooser} type="button" class="btn btn-primary" onClick={() => picker.current?.click()}>
               Choose files
             </button>
             <span>
@@ -145,7 +175,8 @@ export default function Converter(props: ConverterProps) {
           </p>
         ) : (
           <p class="cv-unsupported" role="alert">
-            This browser is missing features the converter needs. Please update it, or use a current Chrome, Edge, Firefox or Safari.
+            This browser is missing features the converter needs. Please update it, or use a current Chrome, Edge,
+            Firefox or Safari.
           </p>
         )}
         <input
@@ -179,14 +210,31 @@ export default function Converter(props: ConverterProps) {
 
       <Settings props={props} state={state} capabilities={capabilities} onChange={(patch) => store.setOptions(patch)} />
 
+      {capabilities && !capabilities.exact && (
+        <p class="cv-warning" role="note">
+          This browser adds slight random noise to image data that pages read — a privacy feature against
+          fingerprinting. Converted images can differ from the source by a level or two in places. Switch that
+          protection off for this site if you need exact output.
+        </p>
+      )}
+
       <p class="cv-notice" role="status">
-        {notice}
+        {problem ?? notice}
+      </p>
+
+      {/* Always present, so screen readers announce progress from the first file on. */}
+      <p class="sr-only" aria-live="polite">
+        {items.length === 0
+          ? ''
+          : pending > 0
+            ? `Converting, ${sum.done + sum.failed} of ${sum.files} done`
+            : `${sum.done} ready${sum.failed > 0 ? `, ${sum.failed} failed` : ''}`}
       </p>
 
       {items.length > 0 && (
         <section class="cv-results" aria-label="Results">
           <header class="cv-summary">
-            <p aria-live="polite">
+            <p>
               {pending > 0 ? (
                 <>
                   Converting… <strong>{sum.done + sum.failed}</strong> of <strong>{sum.files}</strong>
@@ -199,7 +247,8 @@ export default function Converter(props: ConverterProps) {
               )}
               {sum.outputs > 0 && (
                 <span class="cv-summary-size">
-                  {formatBytes(sum.inputBytes)} → {formatBytes(sum.outputBytes)} · {sizeChange(sum.inputBytes, sum.outputBytes)}
+                  {formatBytes(sum.inputBytes)} → {formatBytes(sum.outputBytes)} ·{' '}
+                  {sizeChange(sum.inputBytes, sum.outputBytes)}
                 </span>
               )}
             </p>
@@ -209,14 +258,20 @@ export default function Converter(props: ConverterProps) {
                   {zipping ? 'Packing…' : `Download all (${sum.outputs}) as ZIP`}
                 </button>
               )}
-              <button type="button" class="btn" onClick={() => store.clear()}>
+              <button type="button" class="btn" onClick={clearAll}>
                 Clear all
               </button>
             </div>
           </header>
           <ul class="cv-list" aria-label="Files">
             {items.map((item) => (
-              <Row key={item.id} item={item} canStepFrames={capabilities?.frames ?? true} store={store} />
+              <Row
+                key={item.id}
+                item={item}
+                canStepFrames={capabilities?.frames ?? true}
+                store={store}
+                fallbackFocus={chooser}
+              />
             ))}
           </ul>
         </section>
@@ -267,7 +322,12 @@ function Choice<T extends string>(props: {
   );
 }
 
-function Settings(props: { props: ConverterProps; state: State; capabilities: Capabilities | null; onChange(patch: Partial<ConvertOptions>): void }) {
+function Settings(props: {
+  props: ConverterProps;
+  state: State;
+  capabilities: Capabilities | null;
+  onChange(patch: Partial<ConvertOptions>): void;
+}) {
   const { state, capabilities, onChange } = props;
   const { options, items } = state;
   const id = useId();
@@ -367,7 +427,11 @@ function Settings(props: { props: ConverterProps; state: State; capabilities: Ca
               <div class="cv-inline">
                 <label class="cv-colour">
                   <span>Background colour</span>
-                  <input type="color" value={fill} onChange={(event) => onChange({ background: event.currentTarget.value })} />
+                  <input
+                    type="color"
+                    value={fill}
+                    onChange={(event) => onChange({ background: event.currentTarget.value })}
+                  />
                 </label>
               </div>
               <small>JPG has no transparency; see-through areas take this colour.</small>
@@ -388,11 +452,13 @@ function Settings(props: { props: ConverterProps; state: State; capabilities: Ca
               value={options.animation}
               options={[
                 { value: 'frames', label: 'Every frame', hint: 'One PNG per frame. Untick the ones you do not want.' },
-                { value: 'apng', label: 'Animated PNG', hint: 'One .png that still moves (APNG).' },
+                { value: 'apng', label: 'Animated PNG', hint: 'One .png that still moves (APNG). Always truecolor.' },
               ]}
               onChange={(animation) => onChange({ animation })}
               note={
-                capabilities && !capabilities.frames ? 'This browser cannot step through animation frames, so only the first frame is converted.' : undefined
+                capabilities && !capabilities.frames
+                  ? 'This browser cannot step through animation frames, so only the first frame is converted.'
+                  : undefined
               }
             />
           ) : (
@@ -419,7 +485,11 @@ function Settings(props: { props: ConverterProps; state: State; capabilities: Ca
             ]}
             onChange={(gamut) => onChange({ gamut })}
             disabled={capabilities !== null && !capabilities.p3}
-            note={capabilities && !capabilities.p3 ? 'This browser cannot read images in Display P3, so output is sRGB.' : undefined}
+            note={
+              capabilities && !capabilities.p3
+                ? 'This browser cannot read images in Display P3, so output is sRGB.'
+                : undefined
+            }
           />
         </div>
       </details>
@@ -434,15 +504,28 @@ function badges(item: Item, canStepFrames: boolean): string[] {
   if (!detail) return [];
   const out: string[] = [];
   if (detail.frameCount > 1) out.push(`Animated · ${detail.frameCount} frames`);
-  else if (detail.info.animated) out.push(canStepFrames ? 'Animated · first frame' : 'Animated · first frame only in this browser');
+  else if (detail.info.animated)
+    out.push(canStepFrames ? 'Animated · first frame' : 'Animated · first frame only in this browser');
   if (detail.info.hdr)
-    out.push(detail.toneMapped ? `HDR ${detail.info.hdr.toUpperCase()} · tone-mapped` : `HDR ${detail.info.hdr.toUpperCase()} · rendered by browser`);
+    out.push(
+      detail.toneMapped
+        ? `HDR ${detail.info.hdr.toUpperCase()} · tone-mapped`
+        : `HDR ${detail.info.hdr.toUpperCase()} · rendered by browser`,
+    );
   if (detail.info.bitDepth > 8) out.push(`${detail.info.bitDepth}-bit → 8-bit`);
   if (!detail.info.hdr && WIDE_PRIMARIES.has(detail.info.cicp?.primaries ?? 0)) out.push('Wide gamut');
   return out;
 }
 
-function Row({ item, canStepFrames, store }: { item: Item; canStepFrames: boolean; store: ConverterStore }) {
+interface RowProps {
+  item: Item;
+  canStepFrames: boolean;
+  store: ConverterStore;
+  /** Where focus goes when the last row is removed. */
+  fallbackFocus: RefObject<HTMLButtonElement | null>;
+}
+
+function Row({ item, canStepFrames, store, fallbackFocus }: RowProps) {
   const { detail, outputs } = item;
   const single = outputs.length === 1 && outputs[0].frame === null ? outputs[0] : null;
   const frames = single ? [] : outputs;
@@ -486,7 +569,20 @@ function Row({ item, canStepFrames, store }: { item: Item; canStepFrames: boolea
             Download
           </a>
         )}
-        <button type="button" class="btn btn-icon" aria-label={`Remove ${item.file.name}`} onClick={() => store.remove(item.id)}>
+        <button
+          type="button"
+          class="btn btn-icon"
+          aria-label={`Remove ${item.file.name}`}
+          onClick={(event) => {
+            // Keep the keyboard where it was: on the neighbouring row's remove button, or back on "Choose files".
+            const row = event.currentTarget.closest('li');
+            const neighbour = (
+              row?.nextElementSibling ?? row?.previousElementSibling
+            )?.querySelector<HTMLButtonElement>(':scope > .cv-actions > .btn-icon');
+            store.remove(item.id);
+            (neighbour ?? fallbackFocus.current)?.focus();
+          }}
+        >
           <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
             <path d="M3 3l10 10M13 3L3 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" />
           </svg>
@@ -498,7 +594,11 @@ function Row({ item, canStepFrames, store }: { item: Item; canStepFrames: boolea
             <span>
               {chosen} of {frames.length} frames selected
             </span>
-            <button type="button" class="btn btn-quiet" onClick={() => store.selectAll(item.id, chosen < frames.length)}>
+            <button
+              type="button"
+              class="btn btn-quiet"
+              onClick={() => store.selectAll(item.id, chosen < frames.length)}
+            >
               {chosen < frames.length ? 'Select all' : 'Select none'}
             </button>
           </p>
@@ -506,7 +606,12 @@ function Row({ item, canStepFrames, store }: { item: Item; canStepFrames: boolea
             {frames.map((output, index) => (
               <li data-selected={output.selected ? '' : undefined}>
                 <label>
-                  <input type="checkbox" checked={output.selected} aria-label={`Frame ${index + 1}`} onChange={() => store.toggle(item.id, index)} />
+                  <input
+                    type="checkbox"
+                    checked={output.selected}
+                    aria-label={`Frame ${index + 1}`}
+                    onChange={() => store.toggle(item.id, index)}
+                  />
                   <img src={output.url} alt="" loading="lazy" decoding="async" />
                 </label>
                 <a href={output.url} download={output.name} aria-label={`Download ${output.name}`}>

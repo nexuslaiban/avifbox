@@ -3,7 +3,7 @@ import jpeg from 'jpeg-js';
 import { flatten, parseHex } from '../../src/engine/pixels';
 import { embedIcc, isJpeg } from '../../src/engine/jpeg';
 import { displayP3Profile } from '../../src/engine/icc';
-import { outputName, stem, uniqueStem } from '../../src/engine/names';
+import { outputName, stem, uniqueNames, uniqueStem } from '../../src/engine/names';
 import { MAX_FILES, MAX_FILE_BYTES, admit } from '../../src/engine/limits';
 import { openImage, type Decoders } from '../../src/engine/open';
 import type { ConvertOptions, FrameSource, ImageInfo } from '../../src/engine/types';
@@ -92,6 +92,19 @@ describe('names (AC-20)', () => {
   });
 });
 
+describe('uniqueNames', () => {
+  it('keeps distinct names and renames later duplicates before the extension', () => {
+    // A frame of anim.avif and a still called anim-001.avif would otherwise overwrite each other in a ZIP.
+    expect(uniqueNames(['anim-001.png', 'anim-002.png', 'anim-001.png', 'ANIM-001.png', 'photo.jpg'])).toEqual([
+      'anim-001.png',
+      'anim-002.png',
+      'anim-001 (2).png',
+      'ANIM-001 (3).png',
+      'photo.jpg',
+    ]);
+  });
+});
+
 describe('limits (AC-11)', () => {
   const file = (size: number, name = 'a.avif') => ({ name, size });
 
@@ -142,7 +155,14 @@ describe('openImage routing (AC-19)', () => {
     async *frames() {},
   });
   const options = { tone: 'colour', gamut: 'srgb' } as ConvertOptions;
-  const info = (over: Partial<ImageInfo>): ImageInfo => ({ format: 'avif', bitDepth: 8, animated: false, cicp: null, hdr: null, ...over });
+  const info = (over: Partial<ImageInfo>): ImageInfo => ({
+    format: 'avif',
+    bitDepth: 8,
+    animated: false,
+    cicp: null,
+    hdr: null,
+    ...over,
+  });
   const bytes = new Uint8Array(1);
 
   function decoders(over: Partial<Decoders> = {}): Decoders & { calls: string[] } {

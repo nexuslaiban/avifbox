@@ -47,7 +47,13 @@ describe('probe (AC-15)', () => {
   });
 
   it('detects still and animated WebP', () => {
-    expect(probe(fixture('lossless.webp'))).toEqual({ format: 'webp', bitDepth: 8, animated: false, cicp: null, hdr: null });
+    expect(probe(fixture('lossless.webp'))).toEqual({
+      format: 'webp',
+      bitDepth: 8,
+      animated: false,
+      cicp: null,
+      hdr: null,
+    });
     expect(probe(fixture('anim.webp'))?.animated).toBe(true);
   });
 
@@ -81,8 +87,23 @@ describe('probe (AC-15)', () => {
     expect(probe(file)).toEqual({ format: 'avif', bitDepth: 12, animated: false, cicp: null, hdr: null });
   });
 
+  it('reads the bit depth of a grid image from pixi, because a grid item has no av1C of its own', () => {
+    const ipco = box(
+      'ipco',
+      box('pixi', [0, 0, 0, 0], [3, 10, 10, 10]),
+      box('colr', ascii('nclx'), [0, 9, 0, 16, 0, 9, 0x80]),
+    );
+    const ipma = box('ipma', [0, 0, 0, 0], [0, 0, 0, 1], [0, 1, 2, 0x01, 0x02]);
+    const meta = box('meta', [0, 0, 0, 0], box('pitm', [0, 0, 0, 0], [0, 1]), box('iprp', ipco, ipma));
+    const file = concat(box('ftyp', ascii('avif'), [0, 0, 0, 0], ascii('avif'), ascii('mif1')), meta);
+    expect(probe(file)).toMatchObject({ bitDepth: 10, hdr: 'pq' });
+  });
+
   it('survives malformed box sizes without throwing', () => {
-    const bad = concat(box('ftyp', ascii('avif'), [0, 0, 0, 0], ascii('avif')), Uint8Array.from([0xff, 0xff, 0xff, 0xff, 0x6d, 0x65, 0x74, 0x61, 1, 2, 3]));
+    const bad = concat(
+      box('ftyp', ascii('avif'), [0, 0, 0, 0], ascii('avif')),
+      Uint8Array.from([0xff, 0xff, 0xff, 0xff, 0x6d, 0x65, 0x74, 0x61, 1, 2, 3]),
+    );
     expect(probe(bad)).toEqual({ format: 'avif', bitDepth: 8, animated: false, cicp: null, hdr: null });
   });
 });

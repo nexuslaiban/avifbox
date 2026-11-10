@@ -34,7 +34,11 @@ async function jsonLd(page: Page): Promise<Record<string, any>[]> {
 
 /** Site-relative link targets inside <main>, without fragments. */
 async function contentLinks(page: Page): Promise<string[]> {
-  return page.evaluate(() => [...document.querySelectorAll<HTMLAnchorElement>('main a[href^="/"]')].map((a) => a.getAttribute('href')!.split('#')[0]));
+  return page.evaluate(() =>
+    [...document.querySelectorAll<HTMLAnchorElement>('main a[href^="/"]')].map(
+      (a) => a.getAttribute('href')!.split('#')[0],
+    ),
+  );
 }
 
 test.describe('site structure', () => {
@@ -65,7 +69,10 @@ test.describe('site structure', () => {
       expect(description.length, `${path} description`).toBeLessThanOrEqual(160);
       titles.add(title);
       descriptions.add(description);
-      await expect(page.locator('link[rel=canonical]')).toHaveAttribute('href', path === '/' ? `${ORIGIN}/` : `${ORIGIN}${path}`);
+      await expect(page.locator('link[rel=canonical]')).toHaveAttribute(
+        'href',
+        path === '/' ? `${ORIGIN}/` : `${ORIGIN}${path}`,
+      );
       await expect(page.locator('h1')).toHaveCount(1);
       await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     }
@@ -73,7 +80,9 @@ test.describe('site structure', () => {
     expect(descriptions.size).toBe(PAGES.length);
   });
 
-  test('AC-23 tool pages carry SoftwareApplication and FAQ data that match the page, and 900–1,300 words', async ({ page }) => {
+  test('AC-23 tool pages carry SoftwareApplication and FAQ data that match the page, and 900–1,300 words', async ({
+    page,
+  }) => {
     const counts: Record<string, number> = {};
     for (const path of TOOLS) {
       await page.goto(path);
@@ -97,7 +106,10 @@ test.describe('site structure', () => {
     expect(outOfRange, `word counts: ${JSON.stringify(counts)}`).toEqual([]);
   });
 
-  test('AC-24 pages link to each other as the sitemap plan says, and no internal link is broken', async ({ page, request }) => {
+  test('AC-24 pages link to each other as the sitemap plan says, and no internal link is broken', async ({
+    page,
+    request,
+  }) => {
     const required: Record<string, string[]> = {
       '/avif-to-png': ['/avif-to-jpg', '/what-is-avif'],
       '/avif-to-jpg': ['/avif-to-png', '/how-to-open-avif-file'],
@@ -114,18 +126,24 @@ test.describe('site structure', () => {
       const links = await contentLinks(page);
       for (const target of required[path]) expect(links, `${path} should link to ${target}`).toContain(target);
       const everywhere = await page.evaluate(() =>
-        [...document.querySelectorAll<HTMLAnchorElement>('a[href^="/"]')].map((a) => a.getAttribute('href')!.split('#')[0]),
+        [...document.querySelectorAll<HTMLAnchorElement>('a[href^="/"]')].map(
+          (a) => a.getAttribute('href')!.split('#')[0],
+        ),
       );
       everywhere.forEach((href) => seen.add(href));
     }
     for (const href of seen) expect((await request.get(href)).status(), href).toBe(200);
   });
 
-  test('AC-26 sample sizes on the page are the real file sizes, and the results come from this converter', async ({ page }) => {
+  test('AC-26 sample sizes on the page are the real file sizes, and the results come from this converter', async ({
+    page,
+  }) => {
     await page.goto('/avif-to-png');
     await expect(page.locator('#samples .sample')).toHaveCount(3);
     const cells = page.locator('#samples dd[data-file]');
-    const files = await cells.evaluateAll((nodes) => nodes.map((node) => [node.getAttribute('data-file')!, node.textContent!.trim()]));
+    const files = await cells.evaluateAll((nodes) =>
+      nodes.map((node) => [node.getAttribute('data-file')!, node.textContent!.trim()]),
+    );
     expect(files.map(([file]) => file)).toEqual([
       'photo.avif',
       'photo.png',
@@ -137,13 +155,22 @@ test.describe('site structure', () => {
     ]);
     for (const [file, shown] of files) {
       expect(shown, file).toBe(formatBytes(statSync(join(ROOT, 'dist', 'samples', file)).size));
-      await expect(page.getByRole('link', { name: `Download sample ${file}`, exact: true })).toHaveAttribute('href', `/samples/${file}`);
+      await expect(page.getByRole('link', { name: `Download sample ${file}`, exact: true })).toHaveAttribute(
+        'href',
+        `/samples/${file}`,
+      );
     }
 
     // Converting the published source again must reproduce the published result byte for byte.
-    await addFiles(page, { name: 'transparent.avif', mimeType: 'image/avif', buffer: readFileSync(join(ROOT, 'public', 'samples', 'transparent.avif')) });
+    await addFiles(page, {
+      name: 'transparent.avif',
+      mimeType: 'image/avif',
+      buffer: readFileSync(join(ROOT, 'public', 'samples', 'transparent.avif')),
+    });
     await settled(page, 1);
-    expect(await downloadNamed(page, 'transparent.png')).toEqual(readFileSync(join(ROOT, 'public', 'samples', 'transparent.png')));
+    expect(await downloadNamed(page, 'transparent.png')).toEqual(
+      readFileSync(join(ROOT, 'public', 'samples', 'transparent.png')),
+    );
   });
 
   test('a sample can be loaded into the converter from the drop zone', async ({ page }) => {
@@ -179,8 +206,15 @@ test.describe('accessibility', () => {
       for (const path of PAGES) {
         await page.goto(path);
         const results = await new AxeBuilder({ page }).analyze();
-        const serious = results.violations.filter((violation) => violation.impact === 'serious' || violation.impact === 'critical');
-        expect(serious.map((violation) => `${path}: ${violation.id} — ${violation.nodes.map((node) => node.target.join(' ')).join(', ')}`)).toEqual([]);
+        const serious = results.violations.filter(
+          (violation) => violation.impact === 'serious' || violation.impact === 'critical',
+        );
+        expect(
+          serious.map(
+            (violation) =>
+              `${path}: ${violation.id} — ${violation.nodes.map((node) => node.target.join(' ')).join(', ')}`,
+          ),
+        ).toEqual([]);
       }
     });
   }
@@ -191,8 +225,14 @@ test.describe('accessibility', () => {
     await addFiles(page, 'anim.avif', 'hdr-pq.avif', 'corrupt.avif');
     await settled(page, 3);
     const results = await new AxeBuilder({ page }).include('[data-tool]').analyze();
-    const serious = results.violations.filter((violation) => violation.impact === 'serious' || violation.impact === 'critical');
-    expect(serious.map((violation) => `${violation.id} — ${violation.nodes.map((node) => node.target.join(' ')).join(', ')}`)).toEqual([]);
+    const serious = results.violations.filter(
+      (violation) => violation.impact === 'serious' || violation.impact === 'critical',
+    );
+    expect(
+      serious.map(
+        (violation) => `${violation.id} — ${violation.nodes.map((node) => node.target.join(' ')).join(', ')}`,
+      ),
+    ).toEqual([]);
   });
 
   test('AC-28 the file picker can be opened from the keyboard', async ({ page }) => {

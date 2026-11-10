@@ -8,15 +8,26 @@ import { fileURLToPath } from 'node:url';
 const out = join(dirname(fileURLToPath(import.meta.url)), '..', 'tests', 'fixtures');
 mkdirSync(out, { recursive: true });
 const f = (name) => join(out, name);
-const ffmpeg = (...args) => execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', ...args], { stdio: 'inherit' });
+const ffmpeg = (...args) =>
+  execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', ...args], { stdio: 'inherit' });
 
 // Identity-matrix 4:4:4 lossless AV1: decoded RGB equals the source RGB exactly.
 const LOSSLESS = ['-c:v', 'libaom-av1', '-still-picture', '1', '-crf', '0', '-aom-params', 'lossless=1'];
-const tagged = (fmt, primaries, transfer) => `format=${fmt},setparams=color_primaries=${primaries}:color_trc=${transfer}:colorspace=gbr:range=pc`;
+const tagged = (fmt, primaries, transfer) =>
+  `format=${fmt},setparams=color_primaries=${primaries}:color_trc=${transfer}:colorspace=gbr:range=pc`;
 
 // --- still: 64x48 test card, lossless, 8-bit sRGB. still.png is the pixel reference.
 ffmpeg('-f', 'lavfi', '-i', 'testsrc2=s=64x48:d=1', '-frames:v', '1', '-pix_fmt', 'rgb24', f('still.png'));
-ffmpeg('-i', f('still.png'), '-frames:v', '1', '-vf', tagged('gbrp', 'bt709', 'iec61966-2-1'), ...LOSSLESS, f('still.avif'));
+ffmpeg(
+  '-i',
+  f('still.png'),
+  '-frames:v',
+  '1',
+  '-vf',
+  tagged('gbrp', 'bt709', 'iec61966-2-1'),
+  ...LOSSLESS,
+  f('still.avif'),
+);
 ffmpeg('-i', f('still.png'), '-frames:v', '1', '-c:v', 'libwebp', '-lossless', '1', f('lossless.webp'));
 
 // --- alpha: left half opaque red, top-right half-transparent blue, bottom-right fully transparent.
@@ -55,8 +66,32 @@ ffmpeg('-i', f('still.png'), '-frames:v', '1', '-c:v', 'libwebp', '-lossless', '
 }
 
 // --- animated: 5 frames at 5 fps (200 ms each).
-ffmpeg('-f', 'lavfi', '-i', 'testsrc2=s=64x48:r=5:d=1', '-pix_fmt', 'yuv420p', '-c:v', 'libaom-av1', '-crf', '20', f('anim.avif'));
-ffmpeg('-f', 'lavfi', '-i', 'testsrc2=s=64x48:r=5:d=0.6', '-c:v', 'libwebp_anim', '-lossless', '1', '-loop', '0', f('anim.webp'));
+ffmpeg(
+  '-f',
+  'lavfi',
+  '-i',
+  'testsrc2=s=64x48:r=5:d=1',
+  '-pix_fmt',
+  'yuv420p',
+  '-c:v',
+  'libaom-av1',
+  '-crf',
+  '20',
+  f('anim.avif'),
+);
+ffmpeg(
+  '-f',
+  'lavfi',
+  '-i',
+  'testsrc2=s=64x48:r=5:d=0.6',
+  '-c:v',
+  'libwebp_anim',
+  '-lossless',
+  '1',
+  '-loop',
+  '0',
+  f('anim.webp'),
+);
 
 // --- HDR: 10-bit BT.2020 PQ patches, lossless. Codes are 10-bit PQ code values per channel.
 {
@@ -139,7 +174,21 @@ ffmpeg('-f', 'lavfi', '-i', 'testsrc2=s=64x48:r=5:d=0.6', '-c:v', 'libwebp_anim'
 
 // --- photo-like: far more than 256 colours. Lossy AVIF plus the same picture as a .jfif (a JPEG).
 ffmpeg('-f', 'lavfi', '-i', 'mandelbrot=s=320x240:r=1', '-frames:v', '1', '-pix_fmt', 'rgb24', f('photo.png'));
-ffmpeg('-i', f('photo.png'), '-frames:v', '1', '-pix_fmt', 'yuv420p', '-c:v', 'libaom-av1', '-still-picture', '1', '-crf', '24', f('photo.avif'));
+ffmpeg(
+  '-i',
+  f('photo.png'),
+  '-frames:v',
+  '1',
+  '-pix_fmt',
+  'yuv420p',
+  '-c:v',
+  'libaom-av1',
+  '-still-picture',
+  '1',
+  '-crf',
+  '24',
+  f('photo.avif'),
+);
 ffmpeg('-i', f('photo.png'), '-frames:v', '1', '-c:v', 'mjpeg', '-q:v', '3', '-f', 'mjpeg', f('photo.jfif'));
 rmSync(f('photo.png'));
 

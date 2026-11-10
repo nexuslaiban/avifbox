@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
+import { MAX_FILE_BYTES } from '../engine/limits';
 import { probe } from '../engine/probe';
 import type { ImageInfo } from '../engine/types';
 import { formatBytes } from './format';
@@ -31,16 +32,26 @@ export default function Viewer() {
   const [opened, setOpened] = useState<Opened | null>(null);
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
   const [failed, setFailed] = useState(false);
+  const [tooLarge, setTooLarge] = useState(false);
   const [dragging, setDragging] = useState(false);
   const picker = useRef<HTMLInputElement>(null);
 
   useEffect(() => () => (opened ? URL.revokeObjectURL(opened.url) : undefined), [opened]);
 
+  const latest = useRef(0);
+
   const open = async (file: File | undefined) => {
     if (!file) return;
+    const request = ++latest.current;
     setSize(null);
     setFailed(false);
-    const info = probe(new Uint8Array(await file.arrayBuffer()));
+    setTooLarge(file.size > MAX_FILE_BYTES);
+    if (file.size > MAX_FILE_BYTES) return setOpened(null);
+    const info = await file.arrayBuffer().then(
+      (buffer) => probe(new Uint8Array(buffer)),
+      () => null,
+    );
+    if (request !== latest.current) return; // a newer file was chosen while this one was being read
     setOpened({ name: file.name, size: file.size, url: URL.createObjectURL(file), info });
   };
 
@@ -50,7 +61,11 @@ export default function Viewer() {
     if (opened.info) facts.push(['Format', FORMATS[opened.info.format]]);
     if (size) facts.push(['Dimensions', `${size.width} × ${size.height} pixels`]);
     if (opened.info) {
-      facts.push(['Bit depth', `${opened.info.bitDepth}-bit`], ['Colour', colour(opened.info)], ['Animated', opened.info.animated ? 'Yes' : 'No']);
+      facts.push(
+        ['Bit depth', `${opened.info.bitDepth}-bit`],
+        ['Colour', colour(opened.info)],
+        ['Animated', opened.info.animated ? 'Yes' : 'No'],
+      );
     }
   }
 
@@ -93,44 +108,54 @@ export default function Viewer() {
         </ul>
       </div>
 
-      {opened && (
-        <div class="vw-result" aria-live="polite">
-          <figure class="vw-stage">
-            {failed || !opened.info ? (
-              <p class="vw-failed">
-                {opened.info
-                  ? 'This browser cannot display the file. The converter can still decode it — use the buttons below.'
-                  : 'This does not look like an AVIF, WebP, JPG or PNG image.'}
+      {/* Always present, so screen readers announce the result when it appears. */}
+      <div aria-live="polite">
+        {tooLarge && (
+          <p class="cv-notice">
+            That file is over {MAX_FILE_BYTES / (1024 * 1024)} MB, which is more than this viewer opens.
+          </p>
+        )}
+        {opened && (
+          <div class="vw-result">
+            <figure class="vw-stage">
+              {failed || !opened.info ? (
+                <p class="vw-failed">
+                  {opened.info
+                    ? 'This browser cannot display the file. The converter can still decode it — use the buttons below.'
+                    : 'This does not look like an AVIF, WebP, JPG or PNG image.'}
+                </p>
+              ) : (
+                <img
+                  src={opened.url}
+                  alt={`Preview of ${opened.name}`}
+                  onLoad={(event) =>
+                    setSize({ width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight })
+                  }
+                  onError={() => setFailed(true)}
+                />
+              )}
+            </figure>
+            <div class="vw-facts">
+              <dl>
+                {facts.map(([label, value]) => (
+                  <>
+                    <dt>{label}</dt>
+                    <dd>{value}</dd>
+                  </>
+                ))}
+              </dl>
+              <p class="vw-next">
+                <a class="btn btn-primary" href="/avif-to-png">
+                  Convert to PNG
+                </a>
+                <a class="btn" href="/avif-to-jpg">
+                  Convert to JPG
+                </a>
               </p>
-            ) : (
-              <img
-                src={opened.url}
-                alt={`Preview of ${opened.name}`}
-                onLoad={(event) => setSize({ width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight })}
-                onError={() => setFailed(true)}
-              />
-            )}
-          </figure>
-          <div class="vw-facts">
-            <dl>
-              {facts.map(([label, value]) => (
-                <>
-                  <dt>{label}</dt>
-                  <dd>{value}</dd>
-                </>
-              ))}
-            </dl>
-            <p class="vw-next">
-              <a class="btn btn-primary" href="/avif-to-png">
-                Convert to PNG
-              </a>
-              <a class="btn" href="/avif-to-jpg">
-                Convert to JPG
-              </a>
-            </p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

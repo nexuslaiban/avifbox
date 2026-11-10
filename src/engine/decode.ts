@@ -12,21 +12,31 @@ const MIME: Record<Format, string> = {
   png: 'image/png',
 };
 
-/** Pixels read back per canvas. Keeps peak memory flat and stays under every browser's canvas limit. */
-const STRIP_PIXELS = 4 * 1024 * 1024;
+/** Size of the canvas pixels are read back through. Small enough for every browser's canvas limits. */
+const TILE_PIXELS = 4 * 1024 * 1024;
+const TILE_WIDTH = 8192;
 
-/** Copies an image out of the browser in horizontal strips, so its size is not bound by canvas limits. */
+/** Copies an image out of the browser tile by tile, so its size is not bound by canvas limits. */
 function readPixels(image: CanvasImageSource, width: number, height: number, gamut: Gamut): Uint8ClampedArray {
-  const rows = Math.max(1, Math.min(height, Math.floor(STRIP_PIXELS / width)));
-  const context = new OffscreenCanvas(width, rows).getContext('2d', { willReadFrequently: true, colorSpace: gamut });
+  const tileWidth = Math.min(width, TILE_WIDTH);
+  const tileHeight = Math.max(1, Math.min(height, Math.floor(TILE_PIXELS / tileWidth)));
+  const context = new OffscreenCanvas(tileWidth, tileHeight).getContext('2d', {
+    willReadFrequently: true,
+    colorSpace: gamut,
+  });
   if (!context) throw new Error('Canvas is not available');
   context.imageSmoothingEnabled = false;
   const out = new Uint8ClampedArray(width * height * 4);
-  for (let y = 0; y < height; y += rows) {
-    const h = Math.min(rows, height - y);
-    context.clearRect(0, 0, width, rows);
-    context.drawImage(image, 0, y, width, h, 0, 0, width, h);
-    out.set(context.getImageData(0, 0, width, h, { colorSpace: gamut }).data, y * width * 4);
+  for (let y = 0; y < height; y += tileHeight) {
+    const h = Math.min(tileHeight, height - y);
+    for (let x = 0; x < width; x += tileWidth) {
+      const w = Math.min(tileWidth, width - x);
+      context.clearRect(0, 0, tileWidth, tileHeight);
+      context.drawImage(image, x, y, w, h, 0, 0, w, h);
+      const tile = context.getImageData(0, 0, w, h, { colorSpace: gamut }).data;
+      for (let row = 0; row < h; row++)
+        out.set(tile.subarray(row * w * 4, (row + 1) * w * 4), ((y + row) * width + x) * 4);
+    }
   }
   return out;
 }
@@ -47,38 +57,43 @@ function still(rgba: Uint8ClampedArray, width: number, height: number, gamut: Ga
 
 async function animation(bytes: Uint8Array, type: string, gamut: Gamut): Promise<FrameSource> {
   const decoder = new ImageDecoder({ data: bytes as Uint8Array<ArrayBuffer>, type, preferAnimation: true });
-  await decoder.tracks.ready;
-  await decoder.completed; // all data is in, so the frame count is final
-  const track = decoder.tracks.selectedTrack;
-  if (!track) throw new Error('No image track');
-  // The first frame is decoded once and kept: it gives the size, and Firefox hands back an unusable
-  // frame when the same index is decoded a second time in a worker.
-  let held: VideoFrame | null = (await decoder.decode({ frameIndex: 0 })).image;
-  const width = held.displayWidth;
-  const height = held.displayHeight;
-  return {
-    width,
-    height,
-    frameCount: track.frameCount,
-    loops: Number.isFinite(track.repetitionCount) ? track.repetitionCount + 1 : 0,
-    gamut,
-    toneMapped: false,
-    async *frames() {
-      try {
-        for (let frameIndex = 0; frameIndex < track.frameCount; frameIndex++) {
-          const image: VideoFrame = held ?? (await decoder.decode({ frameIndex })).image;
-          held = null;
-          try {
-            yield { rgba: readPixels(image, width, height, gamut), delayMs: (image.duration ?? 0) / 1000 };
-          } finally {
-            image.close();
+  try {
+    await decoder.tracks.ready;
+    await decoder.completed; // all data is in, so the frame count is final
+    const track = decoder.tracks.selectedTrack;
+    if (!track) throw new Error('No image track');
+    // The first frame is decoded once and kept: it gives the size, and Firefox hands back an unusable
+    // frame when the same index is decoded a second time in a worker.
+    let held: VideoFrame | null = (await decoder.decode({ frameIndex: 0 })).image;
+    const width = held.displayWidth;
+    const height = held.displayHeight;
+    return {
+      width,
+      height,
+      frameCount: track.frameCount,
+      loops: Number.isFinite(track.repetitionCount) ? track.repetitionCount + 1 : 0,
+      gamut,
+      toneMapped: false,
+      async *frames() {
+        try {
+          for (let frameIndex = 0; frameIndex < track.frameCount; frameIndex++) {
+            const image: VideoFrame = held ?? (await decoder.decode({ frameIndex })).image;
+            held = null;
+            try {
+              yield { rgba: readPixels(image, width, height, gamut), delayMs: (image.duration ?? 0) / 1000 };
+            } finally {
+              image.close();
+            }
           }
+        } finally {
+          decoder.close();
         }
-      } finally {
-        decoder.close();
-      }
-    },
-  };
+      },
+    };
+  } catch (error) {
+    decoder.close();
+    throw error;
+  }
 }
 
 async function wasmDecoder(): Promise<typeof import('@jsquash/avif/decode.js').default> {

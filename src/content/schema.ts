@@ -15,7 +15,12 @@ export function faqSchema(entries: Faq[]): object {
   };
 }
 
-export function articleSchema(page: { path: string; headline: string; description: string; published: string }): object {
+export function articleSchema(page: {
+  path: string;
+  headline: string;
+  description: string;
+  published: string;
+}): object {
   return {
     '@context': 'https://schema.org',
     '@type': 'Article',

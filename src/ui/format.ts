@@ -11,9 +11,10 @@ export function formatBytes(bytes: number): string {
   return `${unit === 0 ? value : Number(value.toPrecision(3))} ${UNITS[unit]}`;
 }
 
-/** How the output size compares with the input: `4.6× larger`, `38% smaller`. */
+/** How the output size compares with the input: `4.6× larger`, `40% larger`, `38% smaller`. */
 export function sizeChange(input: number, output: number): string {
   if (input <= 0 || output === input) return 'same size';
-  if (output > input) return `${Number((output / input).toFixed(1))}× larger`;
-  return `${Math.max(1, Math.round((1 - output / input) * 100))}% smaller`;
+  const percent = Math.max(1, Math.round(Math.abs(output / input - 1) * 100));
+  if (output < input) return `${percent}% smaller`;
+  return output < input * 2 ? `${percent}% larger` : `${Number((output / input).toFixed(1))}× larger`;
 }

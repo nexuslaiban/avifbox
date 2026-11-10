@@ -24,7 +24,9 @@ const sets = SAMPLE_SETS.map((set) => {
     sourceBytes,
     results,
     preview: pngSize(set.results[0].file),
-    change: results.map((result) => `${sizeChange(sourceBytes, result.bytes)} as ${result.label.replace('PNG · ', '')}`).join(', '),
+    change: results
+      .map((result) => `${sizeChange(sourceBytes, result.bytes)} as ${result.label.replace('PNG · ', '')}`)
+      .join(', '),
   };
 });
 ---
@@ -34,14 +36,24 @@ const sets = SAMPLE_SETS.map((set) => {
     <span class="sec-no">{Astro.props.number}</span>
     <h2>Sample files, measured</h2>
   </div>
-  <p class="prose">Three AVIF files and what this converter makes of them. The sizes are read from the files themselves — download either side and check.</p>
+  <p class="prose">
+    Three AVIF files and what this converter makes of them. The sizes are read from the files themselves — download
+    either side and check.
+  </p>
   <ul class="samples">
     {sets.map((set) => (
       <li class="sample">
         <figure>
           <picture>
             <source srcset={`/samples/${set.source}`} type="image/avif" />
-            <img src={`/samples/${set.results[0].file}`} alt={set.alt} width={set.preview.width} height={set.preview.height} loading="lazy" decoding="async" />
+            <img
+              src={`/samples/${set.results[0].file}`}
+              alt={set.alt}
+              width={set.preview.width}
+              height={set.preview.height}
+              loading="lazy"
+              decoding="async"
+            />
           </picture>
         </figure>
         <div class="sample-body">

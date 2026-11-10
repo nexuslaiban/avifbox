@@ -69,7 +69,8 @@ const systems: { id: string; title: string; body: string[] }[] = [
 const faq: FaqEntry[] = [
   {
     question: 'Why can’t I open an AVIF file?',
-    answer: 'AVIF was published in 2019 and software released before then, or not updated since, does not know the format. Nothing is wrong with the file.',
+    answer:
+      'AVIF was published in 2019 and software released before then, or not updated since, does not know the format. Nothing is wrong with the file.',
   },
   {
     question: 'What program opens AVIF files?',
@@ -83,7 +84,8 @@ const faq: FaqEntry[] = [
   },
   {
     question: 'Is it safe to open an AVIF file?',
-    answer: 'An AVIF is an ordinary image, no riskier than a JPG or PNG. Viewing it on this page does not send it anywhere.',
+    answer:
+      'An AVIF is an ordinary image, no riskier than a JPG or PNG. Viewing it on this page does not send it anywhere.',
   },
   {
     question: 'How do I turn an AVIF into a JPG or PNG?',
@@ -92,7 +94,10 @@ const faq: FaqEntry[] = [
   },
 ];
 
-const jsonLd = [articleSchema({ path, headline: 'How to open an AVIF file', description, published: '2026-11-11' }), faqSchema(faq)];
+const jsonLd = [
+  articleSchema({ path, headline: 'How to open an AVIF file', description, published: '2026-11-11' }),
+  faqSchema(faq),
+];
 ---
 
 <Base title={title} description={description} path={path} jsonLd={jsonLd}>
@@ -113,8 +118,8 @@ const jsonLd = [articleSchema({ path, headline: 'How to open an AVIF file', desc
         How to open an <em>AVIF</em> file
       </h1>
       <p class="lede">
-        Drop the file below to view it straight away — your browser can almost certainly display it. Then find your system for a permanent fix, or convert the
-        image to a format everything opens.
+        Drop the file below to view it straight away — your browser can almost certainly display it. Then find your
+        system for a permanent fix, or convert the image to a format everything opens.
       </p>
       <div data-tool class="tool-gap">
         <Viewer client:load />
@@ -147,11 +152,13 @@ const jsonLd = [articleSchema({ path, headline: 'How to open an AVIF file', desc
         </div>
         <div class="prose">
           <p>
-            Converting sidesteps the whole question. <a href="/avif-to-jpg">AVIF to JPG</a> makes a small file that every phone, program and upload form
-            accepts. <a href="/avif-to-png">AVIF to PNG</a> makes a lossless copy and keeps transparency, animation frames included.
+            Converting sidesteps the whole question. <a href="/avif-to-jpg">AVIF to JPG</a> makes a small file that
+            every phone, program and upload form accepts. <a href="/avif-to-png">AVIF to PNG</a> makes a lossless copy
+            and keeps transparency, animation frames included.
           </p>
           <p>
-            Both run in your browser and never upload the image. To understand the format itself, read <a href="/what-is-avif">what AVIF is</a>.
+            Both run in your browser and never upload the image. To understand the format itself, read{' '}
+            <a href="/what-is-avif">what AVIF is</a>.
           </p>
         </div>
       </section>

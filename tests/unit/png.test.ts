@@ -89,6 +89,21 @@ describe('encodePng (AC-16)', () => {
     expect(types(png)).not.toContain('iCCP');
   });
 
+  it('stays exact when the image is compressed in several bands', async () => {
+    // Rows are fed to the compressor about a megabyte at a time; this image needs more than one band,
+    // and every filter looks at the row above, including across a band boundary.
+    const rand = noise(7);
+    const src = image(700, 700, (x, y) => [(x + rand()) & 255, (y * 3) & 255, rand(), x % 5 === 0 ? rand() : 255]);
+    const png = await bytesOf(await encodePng(src, 700, 700, { mode: 'truecolor' }));
+    expect(colourType(png)).toBe(6);
+    expect(decodePng(png).data).toEqual(src);
+
+    const flat = image(1500, 900, (x, y) => [(x >> 8) * 40, (y >> 8) * 60, 0, 255]); // 24 colours
+    const indexed = await bytesOf(await encodePng(flat, 1500, 900, { mode: 'truecolor' }));
+    expect(colourType(indexed)).toBe(3);
+    expect(decodePng(indexed).data).toEqual(flat);
+  });
+
   it('handles a 1x1 image', async () => {
     const src = Uint8Array.from([9, 8, 7, 6]);
     const png = await bytesOf(await encodePng(src, 1, 1, { mode: 'truecolor' }));

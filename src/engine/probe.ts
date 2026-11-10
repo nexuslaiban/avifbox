@@ -48,7 +48,10 @@ function probeAvif(bytes: Uint8Array): ImageInfo | null {
   try {
     for (const prop of primaryItemProperties(view, meta)) {
       if (prop.type === 'av1C') info.bitDepth = av1BitDepth(view.getUint8(prop.start + 2));
-      if (prop.type === 'colr' && ascii(bytes, prop.start, prop.start + 4) === 'nclx') info.cicp = nclx(view, prop.start + 4);
+      // A grid image has no av1C of its own (its tiles do); pixi gives the depth for every kind of item.
+      if (prop.type === 'pixi') info.bitDepth = view.getUint8(prop.start + 5);
+      if (prop.type === 'colr' && ascii(bytes, prop.start, prop.start + 4) === 'nclx')
+        info.cicp = nclx(view, prop.start + 4);
     }
   } catch (error) {
     // A damaged container still decodes or fails downstream; the defaults above are the safe reading.
@@ -71,7 +74,12 @@ function* boxes(view: DataView, start: number, end: number): Generator<Box> {
       size = end - start;
     }
     if (size < header) return;
-    const type = String.fromCharCode(view.getUint8(start + 4), view.getUint8(start + 5), view.getUint8(start + 6), view.getUint8(start + 7));
+    const type = String.fromCharCode(
+      view.getUint8(start + 4),
+      view.getUint8(start + 5),
+      view.getUint8(start + 6),
+      view.getUint8(start + 7),
+    );
     yield { type, start: start + header, end: Math.min(start + size, end) };
     start += size;
   }

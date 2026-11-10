@@ -34,7 +34,11 @@ export const jfifToJpg: ToolPage = {
     caption: 'JFIF and JPG side by side',
     columns: ['JFIF', 'JPG'],
     rows: [
-      ['What it is', 'JPEG File Interchange Format: the standard layout of a JPEG file', 'The usual name and extension for JPEG images'],
+      [
+        'What it is',
+        'JPEG File Interchange Format: the standard layout of a JPEG file',
+        'The usual name and extension for JPEG images',
+      ],
       ['Extension', '.jfif, sometimes .jfi or .jif', '.jpg or .jpeg'],
       ['Image data', 'JPEG compression', 'JPEG compression — identical'],
       ['MIME type', 'image/jpeg', 'image/jpeg'],
@@ -79,7 +83,8 @@ export const jfifToJpg: ToolPage = {
   faq: [
     {
       question: 'How do I convert JFIF to JPG?',
-      answer: 'Drop your .jfif files on the box at the top of this page or press Choose files, then download the .jpg files — one by one or as a ZIP.',
+      answer:
+        'Drop your .jfif files on the box at the top of this page or press Choose files, then download the .jpg files — one by one or as a ZIP.',
     },
     {
       question: 'Is JFIF the same as JPG?',
@@ -88,7 +93,8 @@ export const jfifToJpg: ToolPage = {
     },
     {
       question: 'Does converting JFIF to JPG reduce quality?',
-      answer: 'Not here. With Keep original the output is byte-for-byte identical to the input. Quality only changes if you choose Re-encode.',
+      answer:
+        'Not here. With Keep original the output is byte-for-byte identical to the input. Quality only changes if you choose Re-encode.',
     },
     {
       question: 'Can I just rename .jfif to .jpg?',
@@ -97,7 +103,8 @@ export const jfifToJpg: ToolPage = {
     },
     {
       question: 'Why do my downloads save as JFIF?',
-      answer: 'A Windows setting maps JPEG images to the .jfif extension, and browsers follow it. The website is not doing anything unusual.',
+      answer:
+        'A Windows setting maps JPEG images to the .jfif extension, and browsers follow it. The website is not doing anything unusual.',
     },
     {
       question: 'How do I convert many JFIF files at once?',

@@ -35,12 +35,12 @@ export async function encodePng(rgba: Pixels, width: number, height: number, opt
     parts.push(...chunk('IHDR', header(width, height, COLOUR_PALETTE)), ...(await iccChunk(options.icc)));
     parts.push(...chunk('PLTE', plte));
     if (translucent > 0) parts.push(...chunk('tRNS', trns));
-    parts.push(...chunk('IDAT', await deflate(unfilteredRows(indices, width, height))));
+    parts.push(...chunk('IDAT', ...(await deflate(unfilteredRows(indices, width, height)))));
   } else {
     const channels = isOpaque(rgba) ? 3 : 4;
     parts.push(...chunk('IHDR', header(width, height, channels === 3 ? COLOUR_RGB : COLOUR_RGBA)));
     parts.push(...(await iccChunk(options.icc)));
-    parts.push(...chunk('IDAT', await deflate(filteredRows(rgba, width, height, channels))));
+    parts.push(...chunk('IDAT', ...(await deflate(filteredRows(rgba, width, height, channels)))));
   }
   parts.push(...chunk('IEND'));
   return new Blob(parts as BlobPart[], { type: 'image/png' });
@@ -73,7 +73,7 @@ export class ApngWriter {
     view.setUint16(20, Math.min(65535, Math.max(0, Math.round(delayMs))));
     view.setUint16(22, 1000);
     this.parts.push(...chunk('fcTL', control));
-    this.parts.push(...(this.frames === 0 ? chunk('IDAT', data) : chunk('fdAT', uint32(this.sequence++), data)));
+    this.parts.push(...(this.frames === 0 ? chunk('IDAT', ...data) : chunk('fdAT', uint32(this.sequence++), ...data)));
     this.frames++;
   }
 
@@ -104,7 +104,7 @@ function header(width: number, height: number, colourType: number): Uint8Array {
 async function iccChunk(icc: Uint8Array | undefined): Promise<Uint8Array[]> {
   if (!icc) return [];
   const name = Uint8Array.from([...ICC_NAME].map((c) => c.charCodeAt(0)));
-  return chunk('iCCP', name, Uint8Array.of(0, 0), await deflate(icc));
+  return chunk('iCCP', name, Uint8Array.of(0, 0), ...(await deflate([icc])));
 }
 
 /** Moves non-opaque palette entries to the front so tRNS only has to cover them. */
@@ -128,27 +128,41 @@ function isOpaque(rgba: Pixels): boolean {
   return true;
 }
 
+/** Scanlines are handed to the compressor about this many bytes at a time. */
+const BAND_BYTES = 1 << 20;
+
+/**
+ * Collects scanlines into bands. The filtered image is never held in memory as a whole: for a large
+ * photo that copy would be as big as the pixels themselves.
+ */
+function* bands(stride: number, height: number, writeRow: (y: number, row: Uint8Array) => void): Generator<Uint8Array> {
+  const rowsPerBand = Math.max(1, Math.floor(BAND_BYTES / stride));
+  for (let y = 0; y < height; y += rowsPerBand) {
+    const rows = Math.min(rowsPerBand, height - y);
+    const band = new Uint8Array(rows * stride);
+    for (let r = 0; r < rows; r++) writeRow(y + r, band.subarray(r * stride, (r + 1) * stride));
+    yield band;
+  }
+}
+
 /** Palette rows compress best unfiltered: filter type 0 on every scanline. */
-function unfilteredRows(indices: Uint8Array, width: number, height: number): Uint8Array {
-  const out = new Uint8Array((width + 1) * height);
-  for (let y = 0; y < height; y++) out.set(indices.subarray(y * width, (y + 1) * width), y * (width + 1) + 1);
-  return out;
+function unfilteredRows(indices: Uint8Array, width: number, height: number): Generator<Uint8Array> {
+  return bands(width + 1, height, (y, row) => row.set(indices.subarray(y * width, (y + 1) * width), 1));
 }
 
 /**
  * Applies, per scanline, whichever of the five PNG filters gives the smallest sum of absolute
  * residuals — the standard heuristic for truecolour images.
  */
-function filteredRows(rgba: Pixels, width: number, height: number, channels: 3 | 4): Uint8Array {
+function filteredRows(rgba: Pixels, width: number, height: number, channels: 3 | 4): Generator<Uint8Array> {
   const stride = width * channels;
-  const out = new Uint8Array((stride + 1) * height);
   const candidates = [0, 1, 2, 3, 4].map(() => new Uint8Array(stride));
   const [none, sub, up, average, paeth] = candidates;
   const sums = new Float64Array(5);
   let current = new Uint8Array(stride);
   let previous = new Uint8Array(stride);
 
-  for (let y = 0; y < height; y++) {
+  return bands(stride + 1, height, (y, row) => {
     if (channels === 4) {
       current.set(rgba.subarray(y * stride, (y + 1) * stride));
     } else {
@@ -181,13 +195,12 @@ function filteredRows(rgba: Pixels, width: number, height: number, channels: 3 |
     }
     let best = 0;
     for (let f = 1; f < 5; f++) if (sums[f] < sums[best]) best = f;
-    out[y * (stride + 1)] = best;
-    out.set(candidates[best], y * (stride + 1) + 1);
+    row[0] = best;
+    row.set(candidates[best], 1);
     const swap = previous;
     previous = current;
     current = swap;
-  }
-  return out;
+  });
 }
 
 /** Magnitude of a filtered byte read as a signed value. */
@@ -195,9 +208,21 @@ function residual(byte: number): number {
   return byte < 128 ? byte : 256 - byte;
 }
 
-async function deflate(data: Uint8Array): Promise<Uint8Array> {
-  const stream = new Blob([data as BlobPart]).stream().pipeThrough(new CompressionStream('deflate'));
-  return new Uint8Array(await new Response(stream).arrayBuffer());
+/** zlib-compresses the pieces as they arrive and returns the compressed stream, also in pieces. */
+async function deflate(pieces: Iterable<Uint8Array>): Promise<Uint8Array[]> {
+  const stream = new CompressionStream('deflate');
+  const writer = stream.writable.getWriter();
+  const reader = stream.readable.getReader();
+  const compressed: Uint8Array[] = [];
+  const feed = async (): Promise<void> => {
+    for (const piece of pieces) await writer.write(piece as Uint8Array<ArrayBuffer>);
+    await writer.close();
+  };
+  const drain = async (): Promise<void> => {
+    for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) compressed.push(chunk.value);
+  };
+  await Promise.all([feed(), drain()]);
+  return compressed;
 }
 
 function uint32(value: number): Uint8Array {

@@ -1,4 +1,5 @@
-import { ConvertError, convert } from './convert';
+import { convert } from './convert';
+import { ConvertError } from './errors';
 import { decoders } from './decode';
 import type { JobReply, JobRequest } from './protocol';
 
@@ -22,3 +23,5 @@ scope.onmessage = async ({ data }) => {
     scope.postMessage({ job, error: describe(error) });
   }
 };
+
+scope.postMessage({ ready: true });

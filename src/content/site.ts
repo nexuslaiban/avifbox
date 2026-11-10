@@ -32,13 +32,48 @@ export const STAMPS = [
 ] as const;
 
 export const RELATED = {
-  avifToPng: { href: '/avif-to-png', label: 'AVIF to PNG', note: 'Lossless, with transparency, animation and HDR handled.', kind: 'Converter' },
-  avifToJpg: { href: '/avif-to-jpg', label: 'AVIF to JPG', note: 'Small files that every app and upload form accepts.', kind: 'Converter' },
-  jfifToJpg: { href: '/jfif-to-jpg', label: 'JFIF to JPG', note: 'A lossless rename: the image data is not touched.', kind: 'Converter' },
-  jfifToPng: { href: '/jfif-to-png', label: 'JFIF to PNG', note: 'For editing and for tools that insist on PNG.', kind: 'Converter' },
-  webpToPng: { href: '/webp-to-png', label: 'WebP to PNG', note: 'Keeps transparency; splits animated WebP into frames.', kind: 'Converter' },
-  whatIsAvif: { href: '/what-is-avif', label: 'What is AVIF?', note: 'The format, its strengths and where it still falls short.', kind: 'Guide' },
-  openAvif: { href: '/how-to-open-avif-file', label: 'Open an AVIF file', note: 'Windows, Mac, iPhone, Android, Photoshop — and a viewer.', kind: 'Guide' },
+  avifToPng: {
+    href: '/avif-to-png',
+    label: 'AVIF to PNG',
+    note: 'Lossless, with transparency, animation and HDR handled.',
+    kind: 'Converter',
+  },
+  avifToJpg: {
+    href: '/avif-to-jpg',
+    label: 'AVIF to JPG',
+    note: 'Small files that every app and upload form accepts.',
+    kind: 'Converter',
+  },
+  jfifToJpg: {
+    href: '/jfif-to-jpg',
+    label: 'JFIF to JPG',
+    note: 'A lossless rename: the image data is not touched.',
+    kind: 'Converter',
+  },
+  jfifToPng: {
+    href: '/jfif-to-png',
+    label: 'JFIF to PNG',
+    note: 'For editing and for tools that insist on PNG.',
+    kind: 'Converter',
+  },
+  webpToPng: {
+    href: '/webp-to-png',
+    label: 'WebP to PNG',
+    note: 'Keeps transparency; splits animated WebP into frames.',
+    kind: 'Converter',
+  },
+  whatIsAvif: {
+    href: '/what-is-avif',
+    label: 'What is AVIF?',
+    note: 'The format, its strengths and where it still falls short.',
+    kind: 'Guide',
+  },
+  openAvif: {
+    href: '/how-to-open-avif-file',
+    label: 'Open an AVIF file',
+    note: 'Windows, Mac, iPhone, Android, Photoshop — and a viewer.',
+    kind: 'Guide',
+  },
 } as const satisfies Record<string, Related>;
 
 export const PRIVACY_FAQ: Faq = {

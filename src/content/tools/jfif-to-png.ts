@@ -75,7 +75,10 @@ export const jfifToPng: ToolPage = {
         'JPEG has no transparency, so there is none to carry over, and converting does not remove backgrounds: PNGs made here are fully opaque. Other metadata, such as camera model and location, is not copied.',
       ],
     },
-    { ...LIMITS_AND_PRIVACY, body: [`${LIMITS_AND_PRIVACY.body[0]} PNG output has no pixel cap.`, LIMITS_AND_PRIVACY.body[1]] },
+    {
+      ...LIMITS_AND_PRIVACY,
+      body: [`${LIMITS_AND_PRIVACY.body[0]} PNG output has no pixel cap.`, LIMITS_AND_PRIVACY.body[1]],
+    },
   ],
   faq: [
     {
@@ -85,11 +88,13 @@ export const jfifToPng: ToolPage = {
     },
     {
       question: 'Is JFIF to PNG lossless?',
-      answer: 'The PNG is an exact copy of the decoded picture, so nothing more is lost. Detail that JPEG compression already removed cannot come back.',
+      answer:
+        'The PNG is an exact copy of the decoded picture, so nothing more is lost. Detail that JPEG compression already removed cannot come back.',
     },
     {
       question: 'Why is the PNG so much larger than the JFIF?',
-      answer: 'JPEG discards detail to stay small; PNG stores every pixel. Choose Optimized to bring the size down, or keep the image as JPG.',
+      answer:
+        'JPEG discards detail to stay small; PNG stores every pixel. Choose Optimized to bring the size down, or keep the image as JPG.',
     },
     {
       question: 'Should I convert JFIF to PNG or to JPG?',
@@ -102,7 +107,8 @@ export const jfifToPng: ToolPage = {
     },
     {
       question: 'Why do I have JFIF files at all?',
-      answer: 'Windows sometimes saves web images with the .jfif extension because of a system setting. They are ordinary JPEGs.',
+      answer:
+        'Windows sometimes saves web images with the .jfif extension because of a system setting. They are ordinary JPEGs.',
     },
     BATCH_FAQ,
     PRIVACY_FAQ,

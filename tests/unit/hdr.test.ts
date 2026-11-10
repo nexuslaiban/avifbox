@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { SDR_WHITE, hlgToNits, measurePeak, nitsToPq, pqToNits, toneCurve, toneMap, type HdrImage } from '../../src/engine/hdr';
+import {
+  SDR_WHITE,
+  hlgToNits,
+  measurePeak,
+  nitsToPq,
+  pqToNits,
+  srgbToDisplayP3,
+  toneCurve,
+  toneMap,
+  type HdrImage,
+} from '../../src/engine/hdr';
 
 const BT709 = 1;
 const BT2020 = 9;
@@ -21,7 +31,8 @@ const srgbToLinear = (v: number): number => {
   const s = v / 255;
   return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
 };
-const linearToSrgb = (l: number): number => Math.round(255 * (l <= 0.0031308 ? 12.92 * l : 1.055 * l ** (1 / 2.4) - 0.055));
+const linearToSrgb = (l: number): number =>
+  Math.round(255 * (l <= 0.0031308 ? 12.92 * l : 1.055 * l ** (1 / 2.4) - 0.055));
 const pixel = (out: Uint8ClampedArray, i: number): number[] => Array.from(out.subarray(i * 4, i * 4 + 4));
 // A bright image area so the measured peak is 1000 nits regardless of the pixel under test.
 const peak1000 = Array.from({ length: 50 }, () => [1000, 1000, 1000]);
@@ -149,7 +160,13 @@ describe('toneMap (AC-18)', () => {
 
   it('decodes HLG with the 1000-nit system gamma', () => {
     const signal = Math.round(0.75 * 65535);
-    const image: HdrImage = { data: Uint16Array.from([signal, signal, signal, 65535]), width: 1, height: 1, transfer: 'hlg', primaries: BT2020 };
+    const image: HdrImage = {
+      data: Uint16Array.from([signal, signal, signal, 65535]),
+      width: 1,
+      height: 1,
+      transfer: 'hlg',
+      primaries: BT2020,
+    };
     // 203 nits is exactly SDR white, and with no brighter pixel there is nothing to compress.
     expect(pixel(toneMap(image, 'brightness', 'srgb'), 0)).toEqual([255, 255, 255, 255]);
   });
@@ -165,5 +182,63 @@ describe('toneMap (AC-18)', () => {
       'srgb',
     );
     expect([out[3], out[7], out[11]]).toEqual([0, 128, 255]);
+  });
+});
+
+describe('toneMap accuracy', () => {
+  // Exact per-pixel reference for BT.709 sources (no gamut change), written without lookup tables.
+  function reference(pixel: number[], peak: number, mode: 'brightness' | 'colour'): number[] {
+    const [r, g, b] = pixel;
+    const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    const level = mode === 'colour' ? Math.max(r, g, b) : luminance;
+    const scale = level > 0 ? toneCurve(peak)(Math.min(level, peak)) / level / SDR_WHITE : 0;
+    let out = [r * scale, g * scale, b * scale];
+    const high = Math.max(...out);
+    if (high > 1) {
+      const y = Math.min(luminance * scale, 1);
+      out =
+        mode === 'brightness' ? out.map((c) => y + ((1 - y) / (high - y)) * (c - y)) : out.map((c) => Math.min(c, 1));
+    }
+    return out.map((c) => linearToSrgb(Math.min(Math.max(c, 0), 1)));
+  }
+
+  it('matches the exact formula within one level, including just below the peak', () => {
+    const pixels: number[][] = [];
+    let seed = 12345;
+    const random = () => (seed = (Math.imul(seed, 1103515245) + 12345) >>> 0) / 2 ** 32;
+    for (let i = 0; i < 400; i++) {
+      const top = 1000 * (i < 200 ? 0.9 + 0.1 * random() : random()); // half of them crowd the peak
+      pixels.push([top, top * random(), top * random() * random()].sort(() => random() - 0.5));
+    }
+    pixels.push(...peak1000);
+    const image = pqImage(pixels);
+    const peak = measurePeak(image);
+    for (const mode of ['brightness', 'colour'] as const) {
+      const out = toneMap(image, mode, 'srgb');
+      let worst = 0;
+      pixels.forEach((_, i) => {
+        // The image stores PQ codes, so compare against what those codes actually say.
+        const stored = Array.from(image.data.subarray(i * 4, i * 4 + 3), (code) => pqToNits(code / 65535));
+        const expected = reference(stored, peak, mode);
+        for (let c = 0; c < 3; c++) worst = Math.max(worst, Math.abs(out[i * 4 + c] - expected[c]));
+      });
+      expect(worst, `${mode}: worst channel error`).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('keeps a grey ramp monotonic', () => {
+    const ramp = Array.from({ length: 2000 }, (_, i) => [i / 2, i / 2, i / 2]);
+    const out = toneMap(pqImage(ramp), 'brightness', 'srgb');
+    for (let i = 1; i < ramp.length; i++) expect(out[i * 4]).toBeGreaterThanOrEqual(out[(i - 1) * 4]);
+  });
+});
+
+describe('srgbToDisplayP3', () => {
+  it('leaves neutral colours alone and re-expresses saturated ones', () => {
+    expect(srgbToDisplayP3([255, 255, 255])).toEqual([255, 255, 255]);
+    expect(srgbToDisplayP3([0, 0, 0])).toEqual([0, 0, 0]);
+    expect(srgbToDisplayP3([128, 128, 128])).toEqual([128, 128, 128]);
+    // sRGB red is color(display-p3 0.9175 0.2003 0.1386)
+    expect(srgbToDisplayP3([255, 0, 0])).toEqual([234, 51, 35]);
   });
 });

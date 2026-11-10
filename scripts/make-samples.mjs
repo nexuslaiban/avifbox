@@ -21,7 +21,10 @@ const RECIPES = [
 ];
 
 execFileSync('pnpm', ['build'], { cwd: root, stdio: 'inherit' });
-const server = spawn('pnpm', ['exec', 'astro', 'preview', '--port', String(PORT), '--ignore-lock'], { cwd: root, stdio: 'ignore' });
+const server = spawn('pnpm', ['exec', 'astro', 'preview', '--port', String(PORT), '--ignore-lock'], {
+  cwd: root,
+  stdio: 'ignore',
+});
 
 try {
   const base = `http://localhost:${PORT}`;
@@ -49,7 +52,10 @@ try {
       await page.getByRole('radio', { name: label }).check();
       await done.waitFor();
     }
-    const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('link', { name: `Download ${recipe.download}`, exact: true }).click()]);
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      page.getByRole('link', { name: `Download ${recipe.download}`, exact: true }).click(),
+    ]);
     copyFileSync(await download.path(), join(samples, recipe.saveAs));
     console.log(`${recipe.source} -> ${recipe.saveAs}`);
     await page.close();

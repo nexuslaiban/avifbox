@@ -23,6 +23,9 @@ describe('sizeChange', () => {
   it('describes growth as a factor and shrinkage as a percentage', () => {
     expect(sizeChange(1554, 12764)).toBe('8.2× larger');
     expect(sizeChange(1000, 2000)).toBe('2× larger');
+    expect(sizeChange(1000, 1040)).toBe('4% larger');
+    expect(sizeChange(1000, 1001)).toBe('1% larger');
+    expect(sizeChange(1000, 1900)).toBe('90% larger');
     expect(sizeChange(1000, 620)).toBe('38% smaller');
     expect(sizeChange(1000, 999)).toBe('1% smaller');
     expect(sizeChange(1000, 1000)).toBe('same size');

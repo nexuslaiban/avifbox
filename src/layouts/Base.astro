@@ -48,8 +48,20 @@ const current = (href: string) => (href === path ? 'page' : undefined);
       <div class="wrap">
         <a class="brand" href="/" aria-label={`${SITE.name} home`}>
           <svg viewBox="0 0 32 32" aria-hidden="true">
-            <path d="M3 10.5 16 4l13 6.5v11L16 28 3 21.5z" fill="var(--accent)" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"></path>
-            <path d="M3 10.5 16 17l13-6.5M16 17v11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"></path>
+            <path
+              d="M3 10.5 16 4l13 6.5v11L16 28 3 21.5z"
+              fill="var(--accent)"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linejoin="round"
+            ></path>
+            <path
+              d="M3 10.5 16 17l13-6.5M16 17v11"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linejoin="round"
+            ></path>
           </svg>
           <span>
             AVIF<b>Box</b>
@@ -99,7 +111,10 @@ const current = (href: string) => (href === path ? 'page' : undefined);
             ))}
           </ul>
         </nav>
-        <p class="fine">No cookies, no tracking, no ads. AVIF decoding for HDR images uses libavif, © Alliance for Open Media and jSquash contributors.</p>
+        <p class="fine">
+          No cookies, no tracking, no ads. AVIF decoding for HDR images uses libavif, © Alliance for Open Media and
+          jSquash contributors.
+        </p>
       </div>
     </footer>
   </body>

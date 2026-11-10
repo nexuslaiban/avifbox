@@ -20,10 +20,12 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const out = join(root, 'public', 'samples');
 const work = mkdtempSync(join(tmpdir(), 'avifbox-samples-'));
 mkdirSync(out, { recursive: true });
-const ffmpeg = (...args) => execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', ...args], { stdio: 'inherit' });
+const ffmpeg = (...args) =>
+  execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', ...args], { stdio: 'inherit' });
 
 const require = createRequire(import.meta.url);
-const fontFile = (pkg, file) => readFileSync(join(dirname(require.resolve(`${pkg}/package.json`)), 'files', file)).toString('base64');
+const fontFile = (pkg, file) =>
+  readFileSync(join(dirname(require.resolve(`${pkg}/package.json`)), 'files', file)).toString('base64');
 const display = fontFile('@fontsource-variable/big-shoulders-display', 'big-shoulders-display-latin-wght-normal.woff2');
 const fontFace = `@font-face{font-family:D;src:url(data:font/woff2;base64,${display}) format('woff2');font-weight:100 900}`;
 
@@ -162,7 +164,9 @@ await browser.close();
     const row = rows[Math.min(rows.length - 1, Math.floor((y / h) * rows.length))];
     for (let x = 0; x < w; x++) {
       const level = (x / (w - 1)) ** 2.2 * row.peak; // perceptually even ramp
-      row.weights.forEach((weight, c) => raw.writeUInt16LE(Math.round(pq(level * weight) * 65535), (y * w + x) * 6 + c * 2));
+      row.weights.forEach((weight, c) =>
+        raw.writeUInt16LE(Math.round(pq(level * weight) * 65535), (y * w + x) * 6 + c * 2),
+      );
     }
   }
   writeFileSync(join(work, 'hdr.raw'), raw);

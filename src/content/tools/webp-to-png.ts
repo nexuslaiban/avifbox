@@ -82,7 +82,10 @@ export const webpToPng: ToolPage = {
     {
       ...LIMITS_AND_PRIVACY,
       title: 'Batch conversion, free and private',
-      body: [...LIMITS_AND_PRIVACY.body, 'Have AVIF files too? The <a href="/avif-to-png">AVIF to PNG converter</a> works the same way and also handles HDR.'],
+      body: [
+        ...LIMITS_AND_PRIVACY.body,
+        'Have AVIF files too? The <a href="/avif-to-png">AVIF to PNG converter</a> works the same way and also handles HDR.',
+      ],
     },
   ],
   faq: [
@@ -106,7 +109,8 @@ export const webpToPng: ToolPage = {
     },
     {
       question: 'Why is the PNG bigger than the WebP?',
-      answer: 'WebP compresses harder, especially when it is lossy. Choose Optimized to cut the PNG to 256 colours and a fraction of the size.',
+      answer:
+        'WebP compresses harder, especially when it is lossy. Choose Optimized to cut the PNG to 256 colours and a fraction of the size.',
     },
     {
       question: 'Can I convert WebP to PNG in bulk?',
@@ -114,11 +118,13 @@ export const webpToPng: ToolPage = {
     },
     {
       question: 'Can I convert an animated WebP?',
-      answer: 'Yes. Every frame becomes a numbered PNG and you choose which to keep, or pick Animated PNG for one file that still moves.',
+      answer:
+        'Yes. Every frame becomes a numbered PNG and you choose which to keep, or pick Animated PNG for one file that still moves.',
     },
     {
       question: 'Why do images download as WebP?',
-      answer: 'The website serves WebP because it is smaller, and your browser saves what it was given. Converting to PNG makes the file usable anywhere.',
+      answer:
+        'The website serves WebP because it is smaller, and your browser saves what it was given. Converting to PNG makes the file usable anywhere.',
     },
     PRIVACY_FAQ,
   ],

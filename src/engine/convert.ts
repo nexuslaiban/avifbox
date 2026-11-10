@@ -1,3 +1,5 @@
+import { ConvertError } from './errors';
+import { srgbToDisplayP3 } from './hdr';
 import { displayP3Profile } from './icc';
 import { encodeJpeg } from './jpeg';
 import { openImage, type Decoders } from './open';
@@ -5,9 +7,6 @@ import { flatten, parseHex } from './pixels';
 import { ApngWriter, encodePng } from './png';
 import { probe } from './probe';
 import type { ConvertEvent, ConvertOptions } from './types';
-
-/** An error whose message is written for the person converting the file. */
-export class ConvertError extends Error {}
 
 /**
  * Converts one file. Yields what was learned about it first, then one output per result file:
@@ -20,7 +19,8 @@ export async function* convert(file: Blob, options: ConvertOptions, decoders: De
 
   // A JFIF file already is a JPEG: handing back the same bytes is the only lossless "conversion".
   if (options.target === 'jpg' && options.keepJpeg && info.format === 'jpeg') {
-    const bitmap = await createImageBitmap(file); // proves the file decodes, and gives its size
+    // Proves the file decodes, and gives its size. The type is set from the content, not the file name.
+    const bitmap = await createImageBitmap(new Blob([bytes], { type: 'image/jpeg' }));
     const { width, height } = bitmap;
     bitmap.close();
     yield { type: 'info', info, frameCount: 1, width, height, toneMapped: false };
@@ -34,8 +34,13 @@ export async function* convert(file: Blob, options: ConvertOptions, decoders: De
 
   const icc = source.gamut === 'display-p3' ? displayP3Profile() : undefined;
   const fill = options.target === 'jpg' ? (options.background ?? '#ffffff') : options.background;
-  const background = fill ? parseHex(fill) : null;
-  const apng = options.target === 'png' && options.animation === 'apng' && frameCount > 1 ? new ApngWriter(width, height, { loops: source.loops, icc }) : null;
+  // The picker speaks sRGB; in a Display P3 image the same colour is written with different numbers.
+  const picked = fill ? parseHex(fill) : null;
+  const background = picked && source.gamut === 'display-p3' ? srgbToDisplayP3(picked) : picked;
+  const apng =
+    options.target === 'png' && options.animation === 'apng' && frameCount > 1
+      ? new ApngWriter(width, height, { loops: source.loops, icc })
+      : null;
 
   let index = 0;
   for await (const frame of source.frames()) {

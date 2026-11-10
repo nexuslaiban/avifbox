@@ -72,13 +72,18 @@ export const fileRows = (page: Page): Locator => page.getByRole('list', { name: 
 /** Waits until `count` rows are listed and every one of them has finished (converted or failed). */
 export async function settled(page: Page, count: number): Promise<void> {
   await expect(fileRows(page)).toHaveCount(count);
-  await expect(page.getByRole('list', { name: 'Files', exact: true }).locator('> li:not([data-status=done]):not([data-status=error])')).toHaveCount(0);
+  await expect(
+    page
+      .getByRole('list', { name: 'Files', exact: true })
+      .locator('> li:not([data-status=done]):not([data-status=error])'),
+  ).toHaveCount(0);
 }
 
 /** Opens the animation / HDR / colour-profile options, which start collapsed. */
 export async function openAdvanced(page: Page): Promise<void> {
   const panel = page.locator('details.cv-advanced');
-  if (!(await panel.evaluate((element) => (element as HTMLDetailsElement).open))) await panel.locator('summary').click();
+  if (!(await panel.evaluate((element) => (element as HTMLDetailsElement).open)))
+    await panel.locator('summary').click();
 }
 
 export interface Downloaded {
@@ -92,7 +97,8 @@ export async function download(page: Page, trigger: Locator): Promise<Downloaded
   return { name: event.suggestedFilename(), bytes: readFileSync(await event.path()) };
 }
 
-export const downloadLink = (page: Page, name: string): Locator => page.getByRole('link', { name: `Download ${name}`, exact: true });
+export const downloadLink = (page: Page, name: string): Locator =>
+  page.getByRole('link', { name: `Download ${name}`, exact: true });
 
 export async function downloadNamed(page: Page, name: string): Promise<Buffer> {
   const file = await download(page, downloadLink(page, name));

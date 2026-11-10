@@ -37,7 +37,10 @@ class FakeRunner implements JobRunner {
     const { handlers } = this.jobs.get(job)!;
     handlers.onEvent({ type: 'info', info: INFO, frameCount: frames, width: 64, height: 48, toneMapped: false });
     for (let i = 0; i < frames; i++) {
-      handlers.onEvent({ type: 'output', output: { blob: new Blob(['x'.repeat(10 + i)]), width: 64, height: 48, frame: frames > 1 ? i : null } });
+      handlers.onEvent({
+        type: 'output',
+        output: { blob: new Blob(['x'.repeat(10 + i)]), width: 64, height: 48, frame: frames > 1 ? i : null },
+      });
     }
     handlers.onDone();
     this.jobs.delete(job);
@@ -79,7 +82,11 @@ describe('ConverterStore', () => {
     const { runner, store } = setup();
     store.add([file('still.avif'), file('still.avif'), file('STILL.avif')]);
     [1, 2, 3].forEach((job) => runner.finish(job));
-    expect(store.getState().items.map((i) => i.outputs[0].name)).toEqual(['still.png', 'still (2).png', 'STILL (3).png']);
+    expect(store.getState().items.map((i) => i.outputs[0].name)).toEqual([
+      'still.png',
+      'still (2).png',
+      'STILL (3).png',
+    ]);
   });
 
   it('numbers animation frames and lets them be deselected', () => {
@@ -87,9 +94,20 @@ describe('ConverterStore', () => {
     store.add([file('anim.avif')]);
     runner.finish(1, 5);
     const [item] = store.getState().items;
-    expect(item.outputs.map((o) => o.name)).toEqual(['anim-001.png', 'anim-002.png', 'anim-003.png', 'anim-004.png', 'anim-005.png']);
+    expect(item.outputs.map((o) => o.name)).toEqual([
+      'anim-001.png',
+      'anim-002.png',
+      'anim-003.png',
+      'anim-004.png',
+      'anim-005.png',
+    ]);
     store.toggle(item.id, 2);
-    expect(selectedOutputs(store.getState()).map((o) => o.name)).toEqual(['anim-001.png', 'anim-002.png', 'anim-004.png', 'anim-005.png']);
+    expect(selectedOutputs(store.getState()).map((o) => o.name)).toEqual([
+      'anim-001.png',
+      'anim-002.png',
+      'anim-004.png',
+      'anim-005.png',
+    ]);
     store.toggle(item.id, 2);
     expect(selectedOutputs(store.getState())).toHaveLength(5);
     store.selectAll(item.id, false);
@@ -110,6 +128,7 @@ describe('ConverterStore', () => {
   });
 
   it('re-converts everything when an option changes', () => {
+    vi.useFakeTimers();
     const { runner, store } = setup();
     store.add([file('a.avif'), file('b.avif')]);
     runner.finish(1);
@@ -118,16 +137,47 @@ describe('ConverterStore', () => {
 
     store.setOptions({ target: 'jpg', quality: 70 });
 
+    // At once: old work is stopped and the rows show as pending again.
     expect(runner.cancelled).toEqual([2]); // job 1 had finished; job 2 was still pending
     expect(revoke).toHaveBeenCalledWith(stale);
     expect(store.getState().items.map((i) => [i.status, i.outputs.length])).toEqual([
       ['pending', 0],
       ['pending', 0],
     ]);
+    expect(runner.jobs.size).toBe(0);
+
+    // A moment later: everything is submitted again with the new settings.
+    vi.runAllTimers();
     expect([...runner.jobs.values()].map((j) => j.options.target)).toEqual(['jpg', 'jpg']);
     runner.finish(3);
     expect(store.getState().items[0].outputs[0].name).toBe('a.jpg');
     revoke.mockRestore();
+    vi.useRealTimers();
+  });
+
+  it('restarts once when a setting changes many times in a row', () => {
+    vi.useFakeTimers();
+    const { runner, store } = setup({ ...OPTIONS, target: 'jpg' });
+    store.add([file('a.avif'), file('b.avif')]);
+    for (let quality = 89; quality >= 60; quality--) store.setOptions({ quality }); // a held arrow key
+    vi.runAllTimers();
+    expect(runner.jobs.size).toBe(2);
+    expect([...runner.jobs.values()].map((j) => j.options.quality)).toEqual([60, 60]);
+    expect(runner.cancelled).toEqual([1, 2]); // only the original two were ever started and stopped
+    vi.useRealTimers();
+  });
+
+  it('does not restart a file that was removed while the restart was pending', () => {
+    vi.useFakeTimers();
+    const { runner, store } = setup();
+    store.add([file('a.avif'), file('b.avif')]);
+    store.setOptions({ pngMode: 'optimized' });
+    store.remove(store.getState().items[0].id);
+    store.add([file('c.avif')]);
+    vi.runAllTimers();
+    const submitted = [...runner.jobs.values()].map((j) => (j.file as File).name).sort();
+    expect(submitted).toEqual(['b.avif', 'c.avif']);
+    vi.useRealTimers();
   });
 
   it('does nothing when an option is set to the value it already has', () => {
@@ -199,6 +249,13 @@ describe('ConverterStore', () => {
     const { runner, store } = setup();
     store.add([file('a.avif', 100), file('b.avif', 300)]);
     runner.finish(1);
-    expect(totals(store.getState())).toEqual({ files: 2, done: 1, failed: 0, inputBytes: 100, outputBytes: 10, outputs: 1 });
+    expect(totals(store.getState())).toEqual({
+      files: 2,
+      done: 1,
+      failed: 0,
+      inputBytes: 100,
+      outputBytes: 10,
+      outputs: 1,
+    });
   });
 });

@@ -43,12 +43,15 @@ export interface State {
 }
 
 const megabytes = MAX_FILE_BYTES / (1024 * 1024);
+/** How long a setting must stay unchanged before files are converted again. */
+const RESTART_DELAY_MS = 120;
 
 export class ConverterStore {
   private state: State;
   private readonly listeners = new Set<() => void>();
   private readonly jobs = new Map<number, number>(); // item id -> running job
   private nextId = 1;
+  private restart: ReturnType<typeof setTimeout> | undefined;
 
   constructor(
     private readonly runner: JobRunner,
@@ -69,7 +72,15 @@ export class ConverterStore {
     const taken = new Set(this.state.items.map((item) => item.base.toLowerCase()));
     const added = accepted.map((file): Item => {
       const id = this.nextId++;
-      return { id, file, base: uniqueStem(stem(file.name), taken), status: 'pending', error: null, detail: null, outputs: [] };
+      return {
+        id,
+        file,
+        base: uniqueStem(stem(file.name), taken),
+        status: 'pending',
+        error: null,
+        detail: null,
+        outputs: [],
+      };
     });
     this.update({ items: [...this.state.items, ...added], notice: admissionNotice(tooLarge, overflow) });
     for (const item of added) this.start(item);
@@ -92,7 +103,12 @@ export class ConverterStore {
     for (const item of this.state.items) this.stop(item.id);
     const items = this.state.items.map((item): Item => ({ ...item, status: 'pending', error: null, outputs: [] }));
     this.update({ items, options });
-    for (const item of items) this.start(item);
+    // Old results go at once; the new run waits until the setting has settled. A held arrow key on the
+    // quality slider changes it many times a second, and each change would otherwise restart every file.
+    clearTimeout(this.restart);
+    this.restart = setTimeout(() => {
+      for (const item of this.state.items) if (item.status === 'pending' && !this.jobs.has(item.id)) this.start(item);
+    }, RESTART_DELAY_MS);
   }
 
   toggle(id: number, index: number): void {
@@ -125,7 +141,8 @@ export class ConverterStore {
     const job = this.jobs.get(id);
     if (job !== undefined) this.runner.cancel(job);
     this.jobs.delete(id);
-    for (const output of this.state.items.find((item) => item.id === id)?.outputs ?? []) URL.revokeObjectURL(output.url);
+    for (const output of this.state.items.find((item) => item.id === id)?.outputs ?? [])
+      URL.revokeObjectURL(output.url);
   }
 
   private patch(id: number, change: (item: Item) => Partial<Item>): void {
@@ -170,7 +187,9 @@ function admissionNotice(tooLarge: File[], overflow: number): string | null {
 
 /** Outputs that "Download all" would include. */
 export function selectedOutputs(state: State): OutputItem[] {
-  return state.items.flatMap((item) => (item.status === 'done' ? item.outputs.filter((output) => output.selected) : []));
+  return state.items.flatMap((item) =>
+    item.status === 'done' ? item.outputs.filter((output) => output.selected) : [],
+  );
 }
 
 export interface Totals {

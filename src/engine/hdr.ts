@@ -72,16 +72,25 @@ const PRIMARIES = {
 
 function multiply(a: Matrix, b: Matrix): Matrix {
   const out = new Array<number>(9).fill(0);
-  for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) for (let k = 0; k < 3; k++) out[r * 3 + c] += a[r * 3 + k] * b[k * 3 + c];
+  for (let r = 0; r < 3; r++)
+    for (let c = 0; c < 3; c++) for (let k = 0; k < 3; k++) out[r * 3 + c] += a[r * 3 + k] * b[k * 3 + c];
   return out;
 }
 
 function invert(m: Matrix): Matrix {
   const [a, b, c, d, e, f, g, h, i] = m;
   const det = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
-  return [e * i - f * h, c * h - b * i, b * f - c * e, f * g - d * i, a * i - c * g, c * d - a * f, d * h - e * g, b * g - a * h, a * e - b * d].map(
-    (v) => v / det,
-  );
+  return [
+    e * i - f * h,
+    c * h - b * i,
+    b * f - c * e,
+    f * g - d * i,
+    a * i - c * g,
+    c * d - a * f,
+    d * h - e * g,
+    b * g - a * h,
+    a * e - b * d,
+  ].map((v) => v / det);
 }
 
 /** Linear RGB -> CIE XYZ for a D65 colour space given by its primaries. */
@@ -91,7 +100,9 @@ function rgbToXyz([xr, yr, xg, yg, xb, yb]: Chromaticities): Matrix {
   const primaries = [r[0], g[0], b[0], r[1], g[1], b[1], r[2], g[2], b[2]];
   const white = xyz(D65[0], D65[1]);
   const inverse = invert(primaries);
-  const scale = [0, 1, 2].map((row) => inverse[row * 3] * white[0] + inverse[row * 3 + 1] * white[1] + inverse[row * 3 + 2] * white[2]);
+  const scale = [0, 1, 2].map(
+    (row) => inverse[row * 3] * white[0] + inverse[row * 3 + 1] * white[1] + inverse[row * 3 + 2] * white[2],
+  );
   return primaries.map((v, index) => v * scale[index % 3]);
 }
 
@@ -208,25 +219,54 @@ export function toneMap(image: HdrImage, mode: ToneMode, gamut: Gamut): Uint8Cla
     }
 
     const level = mode === 'colour' ? Math.max(r, g, b) : luminance;
-    const scale = level >= peak ? 1 / level : scales[Math.round(Math.sqrt(Math.sqrt(level / peak)) * CURVE_STEPS)];
+    let scale = 0;
+    if (level >= peak) {
+      scale = 1 / level;
+    } else if (level > 0) {
+      const position = Math.sqrt(Math.sqrt(level / peak)) * CURVE_STEPS;
+      const index = Math.floor(position);
+      scale = scales[index] + (scales[index + 1] - scales[index]) * (position - index);
+    }
     r *= scale;
     g *= scale;
     b *= scale;
 
     // Keep brightness: a channel still above white is desaturated toward the (in-range) luminance.
-    const high = Math.max(r, g, b);
-    if (high > 1) {
-      const y = Math.min(luminance * scale, 1);
-      const t = (1 - y) / (high - y);
-      r = y + t * (r - y);
-      g = y + t * (g - y);
-      b = y + t * (b - y);
+    // Keep colour never needs this — its scale already puts the brightest channel at or below white.
+    if (mode === 'brightness') {
+      const high = Math.max(r, g, b);
+      if (high > 1) {
+        const y = Math.min(luminance * scale, 1);
+        const t = (1 - y) / (high - y);
+        r = y + t * (r - y);
+        g = y + t * (g - y);
+        b = y + t * (b - y);
+      }
     }
 
-    out[p] = SRGB_OETF[Math.round(Math.max(r, 0) * OETF_STEPS)];
-    out[p + 1] = SRGB_OETF[Math.round(Math.max(g, 0) * OETF_STEPS)];
-    out[p + 2] = SRGB_OETF[Math.round(Math.max(b, 0) * OETF_STEPS)];
+    out[p] = SRGB_OETF[Math.round(unit(r) * OETF_STEPS)];
+    out[p + 1] = SRGB_OETF[Math.round(unit(g) * OETF_STEPS)];
+    out[p + 2] = SRGB_OETF[Math.round(unit(b) * OETF_STEPS)];
     out[p + 3] = Math.round(data[p + 3] / 257);
   }
   return out;
+}
+
+/** Clamps to [0, 1]; rounding can leave a value a hair outside. */
+function unit(value: number): number {
+  return value < 0 ? 0 : value > 1 ? 1 : value;
+}
+
+const srgbDecode = (v: number): number => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+const srgbEncode = (l: number): number => (l <= 0.0031308 ? 12.92 * l : 1.055 * l ** (1 / 2.4) - 0.055);
+
+/** The Display P3 values that show the same colour as an 8-bit sRGB triplet. */
+export function srgbToDisplayP3(rgb: [number, number, number]): [number, number, number] {
+  const m = multiply(invert(rgbToXyz(PRIMARIES.p3)), rgbToXyz(PRIMARIES.bt709));
+  const linear = rgb.map((v) => srgbDecode(v / 255));
+  const convert = (row: number): number =>
+    Math.round(
+      255 * srgbEncode(unit(m[row * 3] * linear[0] + m[row * 3 + 1] * linear[1] + m[row * 3 + 2] * linear[2])),
+    );
+  return [convert(0), convert(1), convert(2)];
 }

@@ -1,3 +1,5 @@
+import { ConvertError } from './errors';
+
 const SOI = [0xff, 0xd8, 0xff];
 const ICC_TAG = [...'ICC_PROFILE\0'].map((c) => c.charCodeAt(0));
 const MAX_SEGMENT_PAYLOAD = 65533;
@@ -24,12 +26,28 @@ export function embedIcc(jpeg: Uint8Array, icc: Uint8Array): Uint8Array {
 }
 
 /** Encodes opaque RGBA with the browser's JPEG encoder. `quality` is 1–100. */
-export async function encodeJpeg(rgba: Uint8ClampedArray, width: number, height: number, quality: number, icc?: Uint8Array): Promise<Blob> {
-  const canvas = new OffscreenCanvas(width, height);
-  const context = canvas.getContext('2d');
-  if (!context) throw new Error(`This browser cannot create a ${width}×${height} canvas for JPG output`);
-  context.putImageData(new ImageData(rgba as Uint8ClampedArray<ArrayBuffer>, width, height), 0, 0);
-  const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: quality / 100 });
+export async function encodeJpeg(
+  rgba: Uint8ClampedArray,
+  width: number,
+  height: number,
+  quality: number,
+  icc?: Uint8Array,
+): Promise<Blob> {
+  let blob: Blob;
+  try {
+    const canvas = new OffscreenCanvas(width, height);
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('no 2D context');
+    context.putImageData(new ImageData(rgba as Uint8ClampedArray<ArrayBuffer>, width, height), 0, 0);
+    // Past its size limit a canvas can accept the pixels and silently keep none; the input is opaque,
+    // so a transparent pixel coming back means nothing was stored.
+    if (context.getImageData(width >> 1, height >> 1, 1, 1).data[3] !== 255) throw new Error('canvas kept no pixels');
+    blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: quality / 100 });
+  } catch {
+    throw new ConvertError(
+      `This browser cannot make a JPG of ${width}×${height} pixels. PNG output has no such limit.`,
+    );
+  }
   if (!icc) return blob;
   const tagged = embedIcc(new Uint8Array(await blob.arrayBuffer()), icc);
   return new Blob([tagged as BlobPart], { type: 'image/jpeg' });

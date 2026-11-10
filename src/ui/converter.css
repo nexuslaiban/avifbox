@@ -78,6 +78,13 @@
   font-size: 1.35rem;
 }
 
+/* Touch devices have no Ctrl+V to offer. */
+@media (pointer: coarse) {
+  .cv-drop-actions span {
+    display: none;
+  }
+}
+
 .cv-unsupported {
   max-width: 36rem;
   font-weight: 700;
@@ -332,7 +339,29 @@
   }
 }
 
+/* Windows high-contrast mode drops background colours, which is all the custom check marks are. */
+@media (forced-colors: active) {
+  .cv-settings input[type='radio'],
+  .cv-settings input[type='checkbox'],
+  .cv-frames input[type='checkbox'] {
+    appearance: auto;
+  }
+
+  .cv-settings input::before,
+  .cv-frames input::before {
+    display: none;
+  }
+}
+
 /* ---------- notice ---------- */
+
+.cv-warning {
+  padding: 0.7rem 0.9rem;
+  border: 2px solid var(--ink);
+  border-left: 10px solid var(--accent);
+  background: var(--card);
+  font-size: 0.95rem;
+}
 
 .cv-notice {
   font-weight: 700;

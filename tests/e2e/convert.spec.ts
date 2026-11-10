@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { PNG } from 'pngjs';
 import { SDR_WHITE, toneMap, type HdrImage } from '../../src/engine/hdr';
 import {
   addFiles,
@@ -93,7 +94,12 @@ test.describe('AVIF to PNG', () => {
   });
 
   test('AC-06 an HDR AVIF is tone-mapped, with two modes', async ({ page }) => {
-    const layout = JSON.parse(fixtureBytes('hdr-pq.json').toString()) as { patch: number; width: number; height: number; rows: number[][][] };
+    const layout = JSON.parse(fixtureBytes('hdr-pq.json').toString()) as {
+      patch: number;
+      width: number;
+      height: number;
+      rows: number[][][];
+    };
     const data = new Uint16Array(layout.width * layout.height * 4);
     for (let y = 0; y < layout.height; y++) {
       for (let x = 0; x < layout.width; x++) {
@@ -102,7 +108,10 @@ test.describe('AVIF to PNG', () => {
       }
     }
     const source: HdrImage = { data, width: layout.width, height: layout.height, transfer: 'pq', primaries: 9 };
-    const centre = (column: number, row: number): [number, number] => [column * layout.patch + 4, row * layout.patch + 4];
+    const centre = (column: number, row: number): [number, number] => [
+      column * layout.patch + 4,
+      row * layout.patch + 4,
+    ];
     const expectClose = (actual: number[], expected: ArrayLike<number>) => {
       for (let c = 0; c < 4; c++) expect(Math.abs(actual[c] - expected[c])).toBeLessThanOrEqual(2);
     };
@@ -222,7 +231,11 @@ test.describe('AVIF to PNG', () => {
   });
 
   test('a file that is not an image is refused with a reason', async ({ page }) => {
-    await addFiles(page, { name: 'report.avif', mimeType: 'image/avif', buffer: Buffer.from('%PDF-1.7 definitely not an image') });
+    await addFiles(page, {
+      name: 'report.avif',
+      mimeType: 'image/avif',
+      buffer: Buffer.from('%PDF-1.7 definitely not an image'),
+    });
     await settled(page, 1);
     await expect(fileRows(page).first()).toHaveAttribute('data-status', 'error');
     await expect(fileRows(page).first()).toContainText(/not a supported image/i);
@@ -237,6 +250,66 @@ test.describe('AVIF to PNG', () => {
     await expect(fileRows(page)).toHaveCount(0);
   });
 
+  test('frames and stills that would share a name stay apart in the ZIP', async ({ page }) => {
+    await addFiles(page, 'anim.avif', upload('still.avif', 'anim-001.avif'));
+    await settled(page, 2);
+    const entries = zipEntries((await download(page, page.getByRole('button', { name: /Download all/ }))).bytes);
+    expect(Object.keys(entries).sort()).toEqual([
+      'anim-001 (2).png',
+      'anim-001.png',
+      'anim-002.png',
+      'anim-003.png',
+      'anim-004.png',
+      'anim-005.png',
+    ]);
+  });
+
+  test('a background colour picked in sRGB is the same colour in Display P3 output', async ({ page, browserName }) => {
+    test.skip(browserName === 'firefox', 'Firefox has no Display P3 canvas');
+    await addFiles(page, 'alpha.avif');
+    await settled(page, 1);
+    await openAdvanced(page);
+    await page.getByRole('radio', { name: 'Display P3' }).check();
+    await page.getByRole('checkbox', { name: 'Fill transparent areas' }).check();
+    await page.getByLabel('Background colour').fill('#ff0000');
+    await settled(page, 1);
+    const png = await downloadNamed(page, 'alpha.png');
+    expect(pngChunks(png).map((c) => c.type)).toContain('iCCP');
+    expect(readPng(png).at(40, 40)).toEqual([234, 51, 35, 255]); // sRGB red, written as Display P3
+  });
+
+  test('removing files keeps keyboard focus in the list, and clearing returns it to the picker', async ({ page }) => {
+    await addFiles(page, 'still.avif', 'alpha.avif', 'photo.avif');
+    await settled(page, 3);
+    await page.getByRole('button', { name: 'Remove still.avif' }).focus();
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('button', { name: 'Remove alpha.avif' })).toBeFocused();
+    await page.getByRole('button', { name: 'Remove photo.avif' }).focus();
+    await page.keyboard.press('Enter'); // last row: focus moves up
+    await expect(page.getByRole('button', { name: 'Remove alpha.avif' })).toBeFocused();
+    await page.keyboard.press('Enter'); // only row: back to the picker
+    await expect(page.getByRole('button', { name: 'Choose files' })).toBeFocused();
+
+    await addFiles(page, 'still.avif', 'alpha.avif');
+    await settled(page, 2);
+    await page.getByRole('button', { name: 'Clear all' }).click();
+    await expect(page.getByRole('button', { name: 'Choose files' })).toBeFocused();
+  });
+
+  test('a browser that adds noise to canvas data is called out', async ({ page }) => {
+    await expect(page.locator('.cv-warning')).toHaveCount(0);
+    await page.addInitScript(() => {
+      const original = OffscreenCanvasRenderingContext2D.prototype.getImageData;
+      OffscreenCanvasRenderingContext2D.prototype.getImageData = function (...args: Parameters<typeof original>) {
+        const data = original.apply(this, args);
+        data.data[0] ^= 1; // what anti-fingerprinting protections do: flip a low bit here and there
+        return data;
+      };
+    });
+    await page.reload();
+    await expect(page.locator('.cv-warning')).toContainText('random noise');
+  });
+
   test('AC-25 the drop zone states its limits and the trust badges are shown', async ({ page }) => {
     const zone = page.getByTestId('dropzone');
     await expect(zone).toContainText('50 files');
@@ -244,7 +317,9 @@ test.describe('AVIF to PNG', () => {
     await expect(zone).toContainText(/animated avif/i);
     await expect(zone).toContainText(/paste/i);
     for (const badge of ['No upload', 'No account', 'No watermark', 'Free']) {
-      await expect(page.getByRole('list', { name: 'Why AVIFBox' }).getByText(badge, { exact: false }).first()).toBeVisible();
+      await expect(
+        page.getByRole('list', { name: 'Why AVIFBox' }).getByText(badge, { exact: false }).first(),
+      ).toBeVisible();
     }
   });
 });
@@ -301,7 +376,24 @@ test.describe('other tools', () => {
     await page.goto('/webp-to-png');
     await addFiles(page, 'anim.webp');
     await settled(page, 1);
-    for (const name of ['anim-001.png', 'anim-002.png', 'anim-003.png']) await expect(downloadLink(page, name)).toBeVisible();
+    for (const name of ['anim-001.png', 'anim-002.png', 'anim-003.png'])
+      await expect(downloadLink(page, name)).toBeVisible();
+  });
+
+  test('an image larger than one readback tile in both directions converts exactly', async ({ page }) => {
+    // 9000 x 600 needs two tiles across and two down; any seam or offset error shows up as a wrong pixel.
+    const source = new PNG({ width: 9000, height: 600 });
+    for (let y = 0; y < 600; y++) {
+      for (let x = 0; x < 9000; x++) {
+        source.data.set([x & 255, (x >> 8) * 7 + (y & 63), y & 255, 255], (y * 9000 + x) * 4);
+      }
+    }
+    await page.goto('/');
+    await addFiles(page, { name: 'wide.png', mimeType: 'image/png', buffer: PNG.sync.write(source) });
+    await settled(page, 1);
+    const result = readPng(await downloadNamed(page, 'wide.png'));
+    expect([result.width, result.height]).toEqual([9000, 600]);
+    expect(Buffer.compare(Buffer.from(result.data), source.data)).toBe(0);
   });
 
   test('the home page converts to PNG or JPG', async ({ page }) => {

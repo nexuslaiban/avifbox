@@ -72,14 +72,26 @@ const jsonLd = [
           <h1>
             AVIF <em>converter</em>
           </h1>
-          <p class="lede">Convert AVIF — and JFIF and WebP — to PNG or JPG. The work is done by your own browser, so your images are never uploaded.</p>
+          <p class="lede">
+            Convert AVIF — and JFIF and WebP — to PNG or JPG. The work is done by your own browser, so your images are
+            never uploaded.
+          </p>
         </div>
       </div>
 
       <div data-tool>
-        <Converter client:load sourceLabel="AVIF, JFIF or WebP" accept={accept} target="png" chooseTarget samples={SAMPLE_BUTTONS} />
+        <Converter
+          client:load
+          sourceLabel="AVIF, JFIF or WebP"
+          accept={accept}
+          target="png"
+          chooseTarget
+          samples={SAMPLE_BUTTONS}
+        />
         <noscript>
-          <p class="note">The converter needs JavaScript, because your browser does the converting. Nothing is sent to a server.</p>
+          <p class="note">
+            The converter needs JavaScript, because your browser does the converting. Nothing is sent to a server.
+          </p>
         </noscript>
       </div>
 

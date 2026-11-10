@@ -114,7 +114,9 @@ const factsNo = next++;
           samples={tool.sourceLabel === 'AVIF' ? SAMPLE_BUTTONS : undefined}
         />
         <noscript>
-          <p class="note">The converter needs JavaScript, because your browser does the converting. Nothing is sent to a server.</p>
+          <p class="note">
+            The converter needs JavaScript, because your browser does the converting. Nothing is sent to a server.
+          </p>
         </noscript>
       </div>
 
@@ -182,7 +184,11 @@ const factsNo = next++;
             <span class="sec-no">{number(proseStart + index)}</span>
             <h2>{section.title}</h2>
           </div>
-          <div class="prose">{section.body.map((block) => (block.startsWith('<ul') ? <Fragment set:html={block} /> : <p set:html={block} />))}</div>
+          <div class="prose">
+            {section.body.map((block) =>
+              block.startsWith('<ul') ? <Fragment set:html={block} /> : <p set:html={block} />,
+            )}
+          </div>
         </section>
       ))}
     </section>
