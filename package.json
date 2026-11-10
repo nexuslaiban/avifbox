@@ -16,10 +16,13 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "fixtures": "node scripts/make-fixtures.mjs",
-    "samples": "node scripts/make-samples.mjs"
+    "samples": "node scripts/make-samples.mjs",
+    "format": "prettier --write ."
   },
   "pnpm": {
-    "onlyBuiltDependencies": []
+    "overrides": {
+      "playwright-core": "1.63.0"
+    }
   },
   "dependencies": {
     "@astrojs/preact": "^6.1.4",
@@ -41,6 +44,8 @@
     "fflate": "^0.8.3",
     "jpeg-js": "^0.4.4",
     "pngjs": "^7.0.0",
+    "prettier": "^3.9.10",
+    "prettier-plugin-astro": "^1.1.2",
     "typescript": "^6.0.3",
     "vitest": "^5.1.0"
   }

@@ -8,6 +8,7 @@ export default defineConfig({
   trailingSlash: 'never',
   build: { format: 'file' },
   integrations: [preact(), sitemap()],
+  markdown: { syntaxHighlight: false }, // no code blocks here; the default highlighter conflicts with CSP
   security: {
     // Files are converted locally; the policy makes "nothing is uploaded" enforceable, not just a promise.
     csp: {

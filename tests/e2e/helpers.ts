@@ -1,0 +1,150 @@
+import { expect, type Locator, type Page } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { unzipSync, unzlibSync } from 'fflate';
+import jpeg from 'jpeg-js';
+import { PNG } from 'pngjs';
+
+const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), '..', 'fixtures');
+
+const MIME: Record<string, string> = {
+  avif: 'image/avif',
+  webp: 'image/webp',
+  jfif: 'image/jpeg',
+  png: 'image/png',
+};
+
+export interface Upload {
+  name: string;
+  mimeType: string;
+  buffer: Buffer;
+}
+
+export function fixtureBytes(name: string): Buffer {
+  return readFileSync(join(FIXTURES, name));
+}
+
+/** A fixture as an upload payload, optionally under a different file name. */
+export function upload(fixture: string, as = fixture): Upload {
+  return { name: as, mimeType: MIME[fixture.split('.').pop()!], buffer: fixtureBytes(fixture) };
+}
+
+export async function addFiles(page: Page, ...files: (string | Upload)[]): Promise<void> {
+  await page
+    .locator('input[type=file]')
+    .first()
+    .setInputFiles(files.map((f) => (typeof f === 'string' ? upload(f) : f)));
+}
+
+async function dataTransfer(page: Page, files: Upload[]) {
+  const payload = files.map((f) => ({ name: f.name, type: f.mimeType, base64: f.buffer.toString('base64') }));
+  return page.evaluateHandle((items) => {
+    const transfer = new DataTransfer();
+    for (const item of items) {
+      const bytes = Uint8Array.from(atob(item.base64), (c) => c.charCodeAt(0));
+      transfer.items.add(new File([bytes], item.name, { type: item.type }));
+    }
+    return transfer;
+  }, payload);
+}
+
+export async function dropFiles(page: Page, target: Locator, ...fixtures: string[]): Promise<void> {
+  const transfer = await dataTransfer(
+    page,
+    fixtures.map((f) => upload(f)),
+  );
+  await target.dispatchEvent('drop', { dataTransfer: transfer });
+}
+
+export async function pasteFiles(page: Page, ...fixtures: string[]): Promise<void> {
+  const transfer = await dataTransfer(
+    page,
+    fixtures.map((f) => upload(f)),
+  );
+  await page.evaluate((clipboardData) => {
+    document.dispatchEvent(new ClipboardEvent('paste', { clipboardData, bubbles: true, cancelable: true }));
+  }, transfer);
+}
+
+export const fileRows = (page: Page): Locator => page.getByRole('list', { name: 'Files', exact: true }).locator('> li');
+
+/** Waits until `count` rows are listed and every one of them has finished (converted or failed). */
+export async function settled(page: Page, count: number): Promise<void> {
+  await expect(fileRows(page)).toHaveCount(count);
+  await expect(page.getByRole('list', { name: 'Files', exact: true }).locator('> li:not([data-status=done]):not([data-status=error])')).toHaveCount(0);
+}
+
+export interface Downloaded {
+  name: string;
+  bytes: Buffer;
+}
+
+/** Clicks a control that triggers a download and returns the saved file. */
+export async function download(page: Page, trigger: Locator): Promise<Downloaded> {
+  const [event] = await Promise.all([page.waitForEvent('download'), trigger.click()]);
+  return { name: event.suggestedFilename(), bytes: readFileSync(await event.path()) };
+}
+
+export const downloadLink = (page: Page, name: string): Locator => page.getByRole('link', { name: `Download ${name}`, exact: true });
+
+export async function downloadNamed(page: Page, name: string): Promise<Buffer> {
+  const file = await download(page, downloadLink(page, name));
+  expect(file.name).toBe(name);
+  return file.bytes;
+}
+
+export interface Raster {
+  width: number;
+  height: number;
+  data: Uint8Array;
+  at(x: number, y: number): number[];
+}
+
+function raster(width: number, height: number, data: Uint8Array): Raster {
+  return { width, height, data, at: (x, y) => Array.from(data.subarray((y * width + x) * 4, (y * width + x) * 4 + 4)) };
+}
+
+export function readPng(bytes: Buffer): Raster {
+  const png = PNG.sync.read(bytes);
+  return raster(png.width, png.height, new Uint8Array(png.data));
+}
+
+export function readJpeg(bytes: Buffer): Raster {
+  const image = jpeg.decode(bytes, { useTArray: true });
+  return raster(image.width, image.height, image.data);
+}
+
+export interface Chunk {
+  type: string;
+  data: Buffer;
+}
+
+export function pngChunks(png: Buffer): Chunk[] {
+  const chunks: Chunk[] = [];
+  for (let at = 8; at < png.length;) {
+    const length = png.readUInt32BE(at);
+    chunks.push({ type: png.toString('latin1', at + 4, at + 8), data: png.subarray(at + 8, at + 8 + length) });
+    at += 12 + length;
+  }
+  return chunks;
+}
+
+export const pngColourType = (png: Buffer): number => pngChunks(png)[0].data[9];
+
+export function zipEntries(zip: Buffer): Record<string, Uint8Array> {
+  return unzipSync(new Uint8Array(zip));
+}
+
+export { unzlibSync as inflateSync };
+
+/** Sets a range input the way a user dragging it would: value plus input event. */
+export async function setRange(slider: Locator, value: number): Promise<void> {
+  await slider.evaluate((element, next) => {
+    const input = element as HTMLInputElement;
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!;
+    setter.call(input, String(next));
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }, value);
+}

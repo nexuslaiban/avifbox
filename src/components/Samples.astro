@@ -1,0 +1,76 @@
+---
+import { readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import { SAMPLE_SETS } from '../content/samples';
+import { formatBytes, sizeChange } from '../ui/format';
+
+interface Props {
+  number: string;
+}
+
+const dir = join(process.cwd(), 'public', 'samples');
+const bytes = (file: string) => statSync(join(dir, file)).size;
+/** Width and height from the PNG header, so the preview reserves its space. */
+const pngSize = (file: string) => {
+  const header = readFileSync(join(dir, file)).subarray(16, 24);
+  return { width: header.readUInt32BE(0), height: header.readUInt32BE(4) };
+};
+
+const sets = SAMPLE_SETS.map((set) => {
+  const sourceBytes = bytes(set.source);
+  const results = set.results.map((result) => ({ ...result, bytes: bytes(result.file) }));
+  return {
+    ...set,
+    sourceBytes,
+    results,
+    preview: pngSize(set.results[0].file),
+    change: results.map((result) => `${sizeChange(sourceBytes, result.bytes)} as ${result.label.replace('PNG · ', '')}`).join(', '),
+  };
+});
+---
+
+<section id="samples">
+  <div class="sec-head">
+    <span class="sec-no">{Astro.props.number}</span>
+    <h2>Sample files, measured</h2>
+  </div>
+  <p class="prose">Three AVIF files and what this converter makes of them. The sizes are read from the files themselves — download either side and check.</p>
+  <ul class="samples">
+    {sets.map((set) => (
+      <li class="sample">
+        <figure>
+          <picture>
+            <source srcset={`/samples/${set.source}`} type="image/avif" />
+            <img src={`/samples/${set.results[0].file}`} alt={set.alt} width={set.preview.width} height={set.preview.height} loading="lazy" decoding="async" />
+          </picture>
+        </figure>
+        <div class="sample-body">
+          <h3>{set.title}</h3>
+          <p class="delta">{set.note}</p>
+          <dl>
+            <dt>AVIF</dt>
+            <dd data-file={set.source}>{formatBytes(set.sourceBytes)}</dd>
+            <dd>
+              <a href={`/samples/${set.source}`} download aria-label={`Download sample ${set.source}`}>
+                Download
+              </a>
+            </dd>
+            {set.results.map((result) => (
+              <>
+                <dt>{result.label}</dt>
+                <dd data-file={result.file}>{formatBytes(result.bytes)}</dd>
+                <dd>
+                  <a href={`/samples/${result.file}`} download aria-label={`Download sample ${result.file}`}>
+                    Download
+                  </a>
+                </dd>
+              </>
+            ))}
+          </dl>
+          <p class="delta">{set.change}.</p>
+          {set.credit && <p class="delta">{set.credit}</p>}
+        </div>
+      </li>
+    ))}
+  </ul>
+</section>

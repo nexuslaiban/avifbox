@@ -101,14 +101,20 @@ describe('limits (AC-11)', () => {
   });
 
   it('accepts up to 50 files and reports the overflow', () => {
-    const result = admit(Array.from({ length: 51 }, () => file(1000)), 0);
+    const result = admit(
+      Array.from({ length: 51 }, () => file(1000)),
+      0,
+    );
     expect(result.accepted).toHaveLength(50);
     expect(result.overflow).toBe(1);
     expect(result.tooLarge).toEqual([]);
   });
 
   it('counts files already queued', () => {
-    const result = admit(Array.from({ length: 5 }, () => file(1000)), 48);
+    const result = admit(
+      Array.from({ length: 5 }, () => file(1000)),
+      48,
+    );
     expect(result.accepted).toHaveLength(2);
     expect(result.overflow).toBe(3);
   });
@@ -131,6 +137,7 @@ describe('openImage routing (AC-19)', () => {
     height: 1,
     frameCount: 1,
     loops: 0,
+    gamut: 'srgb',
     toneMapped: false,
     async *frames() {},
   });

@@ -25,7 +25,7 @@ export function pngChunks(png: Uint8Array): Chunk[] {
   if (!sig.every((b, i) => png[i] === b)) throw new Error('not a PNG');
   const view = new DataView(png.buffer, png.byteOffset, png.byteLength);
   const chunks: Chunk[] = [];
-  for (let at = 8; at < png.length; ) {
+  for (let at = 8; at < png.length;) {
     const length = view.getUint32(at);
     const type = String.fromCharCode(...png.subarray(at + 4, at + 8));
     chunks.push({ type, data: png.subarray(at + 8, at + 8 + length) });
@@ -60,7 +60,10 @@ export function box(type: string, ...payload: (Uint8Array | number[])[]): Uint8A
   const size = 8 + body.reduce((n, p) => n + p.length, 0);
   const out = new Uint8Array(size);
   new DataView(out.buffer).setUint32(0, size);
-  out.set([...type].map((c) => c.charCodeAt(0)), 4);
+  out.set(
+    [...type].map((c) => c.charCodeAt(0)),
+    4,
+  );
   let at = 8;
   for (const p of body) {
     out.set(p, at);

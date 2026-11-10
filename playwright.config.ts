@@ -15,7 +15,9 @@ export default defineConfig({
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: `pnpm build && pnpm preview --port ${PORT}`,
+    // --ignore-lock keeps the server in the foreground even when Astro detects a coding agent and
+    // would otherwise detach it, which Playwright reads as the server exiting early.
+    command: `pnpm build && pnpm exec astro preview --port ${PORT} --ignore-lock`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,

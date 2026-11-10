@@ -1,0 +1,35 @@
+---
+import Base from '../layouts/Base.astro';
+import { NAV } from '../content/site';
+---
+
+<Base title="Page not found | AVIFBox" description="This page does not exist. Pick a converter instead." path="/404" noindex>
+  <section class="band">
+    <div class="wrap reveal">
+      <p class="label">
+        <span>
+          <small>Status</small>
+          <strong>404</strong>
+        </span>
+        <span>
+          <small>Parcel</small>
+          <strong>Not found</strong>
+        </span>
+      </p>
+      <h1>
+        Return to <em>sender</em>
+      </h1>
+      <p class="lede">There is nothing at this address. The converters are all still here:</p>
+      <ul class="cards spaced">
+        {NAV.converters.map((link) => (
+          <li>
+            <a class="card" href={link.href}>
+              <small>Converter</small>
+              <strong>{link.label}</strong>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+</Base>

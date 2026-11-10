@@ -1,0 +1,168 @@
+---
+import Base from '../layouts/Base.astro';
+import Faq from '../components/Faq.astro';
+import Cards from '../components/Cards.astro';
+import Viewer from '../ui/Viewer';
+import { RELATED } from '../content/site';
+import { articleSchema, faqSchema } from '../content/schema';
+import type { Faq as FaqEntry } from '../content/types';
+
+const path = '/how-to-open-avif-file';
+const title = 'How to Open an AVIF File (PC, Mac, iPhone, Android) | AVIFBox';
+const description =
+  'Open an AVIF file on Windows, Mac, iPhone or Android, in Photoshop or Paint — or view it right here in your browser and convert it to PNG or JPG.';
+
+const systems: { id: string; title: string; body: string[] }[] = [
+  {
+    id: 'windows',
+    title: 'On a Windows PC',
+    body: [
+      'Windows 10 (version 1903 or later) and Windows 11 open AVIF in <strong>Photos</strong>, and show thumbnails in File Explorer, once the free <strong>AV1 Video Extension</strong> from the Microsoft Store is installed. Many Windows 11 PCs already have it.',
+      'If Photos says the file format is not supported, install or update that extension and try again.',
+    ],
+  },
+  {
+    id: 'paint',
+    title: 'In Paint',
+    body: [
+      'Paint in Windows 11 opens AVIF the same way, through the AV1 Video Extension. The Paint that ships with older versions of Windows cannot read it at all; convert the file to PNG first and it will open without any loss.',
+    ],
+  },
+  {
+    id: 'mac',
+    title: 'On a Mac',
+    body: [
+      'From macOS 13 Ventura on, AVIF opens in <strong>Preview</strong>, Quick Look, Photos and Safari with nothing to install. On an older macOS, drag the file into Chrome or Firefox, or convert it.',
+    ],
+  },
+  {
+    id: 'iphone',
+    title: 'On an iPhone or iPad',
+    body: [
+      'iOS 16 and iPadOS 16 and later show AVIF in <strong>Photos</strong>, Files and Safari. On older versions the picture appears as a blank icon; converting it to JPG is the simplest fix, and it works in Safari on the phone itself.',
+    ],
+  },
+  {
+    id: 'android',
+    title: 'On Android',
+    body: [
+      'Android 12 and later read AVIF system-wide, so Google Photos, Files and Chrome all display it. On older phones Chrome can usually still open the file even when the gallery cannot.',
+    ],
+  },
+  {
+    id: 'photoshop',
+    title: 'In Photoshop',
+    body: [
+      'Photoshop opens AVIF from <strong>version 23.2</strong> (February 2022) with File › Open. In earlier versions the file is greyed out. Rather than hunting for a plug-in, convert it to PNG: that is lossless, keeps transparency, and every version of Photoshop reads it.',
+      'GIMP reads AVIF from version 2.10.22.',
+    ],
+  },
+  {
+    id: 'browser',
+    title: 'In a web browser',
+    body: [
+      'The quickest way on any computer: drag the file onto a browser window, or use the viewer at the top of this page. Chrome 85, Firefox 93, Edge 121 and Safari 16 or later all display AVIF.',
+    ],
+  },
+];
+
+const faq: FaqEntry[] = [
+  {
+    question: 'Why can’t I open an AVIF file?',
+    answer: 'AVIF was published in 2019 and software released before then, or not updated since, does not know the format. Nothing is wrong with the file.',
+  },
+  {
+    question: 'What program opens AVIF files?',
+    answer:
+      'Any current web browser, Photos on Windows with the AV1 Video Extension, Preview on macOS 13 or later, Photoshop 23.2 or later and GIMP 2.10.22 or later.',
+  },
+  {
+    question: 'How do I open an AVIF file in Windows 10?',
+    answer:
+      'Install the free AV1 Video Extension from the Microsoft Store, then open the file in Photos. Without it, drag the file into Chrome, Edge or Firefox.',
+  },
+  {
+    question: 'Is it safe to open an AVIF file?',
+    answer: 'An AVIF is an ordinary image, no riskier than a JPG or PNG. Viewing it on this page does not send it anywhere.',
+  },
+  {
+    question: 'How do I turn an AVIF into a JPG or PNG?',
+    answer:
+      'Use <a href="/avif-to-jpg">AVIF to JPG</a> for a small file that opens everywhere, or <a href="/avif-to-png">AVIF to PNG</a> for a lossless copy that keeps transparency.',
+  },
+];
+
+const jsonLd = [articleSchema({ path, headline: 'How to open an AVIF file', description, published: '2026-11-11' }), faqSchema(faq)];
+---
+
+<Base title={title} description={description} path={path} jsonLd={jsonLd}>
+  <section class="band">
+    <div class="wrap reveal">
+      <p class="label">
+        <span>
+          <small>Guide</small>
+          <strong>How to</strong>
+        </span>
+        <span>
+          <small>Subject</small>
+          <strong>.AVIF</strong>
+        </span>
+        <span class="barcode" aria-hidden="true"></span>
+      </p>
+      <h1>
+        How to open an <em>AVIF</em> file
+      </h1>
+      <p class="lede">
+        Drop the file below to view it straight away — your browser can almost certainly display it. Then find your system for a permanent fix, or convert the
+        image to a format everything opens.
+      </p>
+      <div data-tool class="tool-gap">
+        <Viewer client:load />
+        <noscript>
+          <p class="note">The viewer needs JavaScript. The instructions below work without it.</p>
+        </noscript>
+      </div>
+    </div>
+  </section>
+
+  <article class="doc wrap">
+    <section class="split">
+      {systems.map((system, index) => (
+        <section id={system.id}>
+          <div class="sec-head">
+            <span class="sec-no">№ {String(index + 1).padStart(2, '0')}</span>
+            <h2>{system.title}</h2>
+          </div>
+          <div class="prose">
+            {system.body.map((paragraph) => (
+              <p set:html={paragraph} />
+            ))}
+          </div>
+        </section>
+      ))}
+      <section id="convert">
+        <div class="sec-head">
+          <span class="sec-no">№ {String(systems.length + 1).padStart(2, '0')}</span>
+          <h2>When nothing works: convert it</h2>
+        </div>
+        <div class="prose">
+          <p>
+            Converting sidesteps the whole question. <a href="/avif-to-jpg">AVIF to JPG</a> makes a small file that every phone, program and upload form
+            accepts. <a href="/avif-to-png">AVIF to PNG</a> makes a lossless copy and keeps transparency, animation frames included.
+          </p>
+          <p>
+            Both run in your browser and never upload the image. To understand the format itself, read <a href="/what-is-avif">what AVIF is</a>.
+          </p>
+        </div>
+      </section>
+    </section>
+
+    <Faq number={`№ ${String(systems.length + 2).padStart(2, '0')}`} entries={faq} />
+    <Cards
+      id="related"
+      number={`№ ${String(systems.length + 3).padStart(2, '0')}`}
+      title="More from the box"
+      links={[RELATED.avifToPng, RELATED.avifToJpg, RELATED.whatIsAvif, RELATED.webpToPng]}
+    />
+  </article>
+</Base>

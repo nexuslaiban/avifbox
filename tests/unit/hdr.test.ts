@@ -8,7 +8,10 @@ const BT2020 = 9;
 function pqImage(pixels: number[][], primaries = BT709): HdrImage {
   const data = new Uint16Array(pixels.length * 4);
   pixels.forEach(([r, g, b, a = 65535], i) => {
-    data.set([r, g, b].map((n) => Math.round(nitsToPq(n) * 65535)), i * 4);
+    data.set(
+      [r, g, b].map((n) => Math.round(nitsToPq(n) * 65535)),
+      i * 4,
+    );
     data[i * 4 + 3] = a;
   });
   return { data, width: pixels.length, height: 1, transfer: 'pq', primaries };
@@ -152,7 +155,15 @@ describe('toneMap (AC-18)', () => {
   });
 
   it('scales 16-bit alpha to 8-bit', () => {
-    const out = toneMap(pqImage([[100, 100, 100, 0], [100, 100, 100, 32768], [100, 100, 100, 65535]]), 'colour', 'srgb');
+    const out = toneMap(
+      pqImage([
+        [100, 100, 100, 0],
+        [100, 100, 100, 32768],
+        [100, 100, 100, 65535],
+      ]),
+      'colour',
+      'srgb',
+    );
     expect([out[3], out[7], out[11]]).toEqual([0, 128, 255]);
   });
 });

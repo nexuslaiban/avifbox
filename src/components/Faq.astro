@@ -1,0 +1,25 @@
+---
+import type { Faq } from '../content/types';
+
+interface Props {
+  number: string;
+  entries: Faq[];
+}
+
+const { number, entries } = Astro.props;
+---
+
+<section id="faq">
+  <div class="sec-head">
+    <span class="sec-no">{number}</span>
+    <h2>Questions people ask</h2>
+  </div>
+  <dl class="faq">
+    {entries.map((entry) => (
+      <div>
+        <dt>{entry.question}</dt>
+        <dd set:html={entry.answer} />
+      </div>
+    ))}
+  </dl>
+</section>

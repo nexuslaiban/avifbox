@@ -33,6 +33,8 @@ export interface FrameSource {
   frameCount: number;
   /** Animation repeat count; 0 means forever. */
   loops: number;
+  /** Colour space the pixel values are in. */
+  gamut: Gamut;
   /** True when HDR was tone-mapped by this engine rather than rendered by the browser. */
   toneMapped: boolean;
   frames(): AsyncGenerator<Frame>;
@@ -63,8 +65,7 @@ export interface Output {
 }
 
 export type ConvertEvent =
-  | { type: 'info'; info: ImageInfo; frameCount: number; width: number; height: number; toneMapped: boolean }
-  | { type: 'output'; output: Output };
+  { type: 'info'; info: ImageInfo; frameCount: number; width: number; height: number; toneMapped: boolean } | { type: 'output'; output: Output };
 
 export interface Capabilities {
   /** Canvas can hold Display P3 pixels. */

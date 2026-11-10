@@ -1,0 +1,135 @@
+---
+import Base from '../layouts/Base.astro';
+import Converter from '../ui/Converter';
+import { tools } from '../content/tools';
+import { NAV, RELATED, SITE, STAMPS } from '../content/site';
+import { SAMPLE_BUTTONS } from '../content/samples';
+import Cards from '../components/Cards.astro';
+
+const title = 'AVIFBox — AVIF Converter That Runs in Your Browser';
+const description =
+  'Free AVIF converter: turn AVIF, JFIF and WebP images into PNG or JPG in your browser. Batch 50 files, animated and HDR support, nothing uploaded.';
+const accept = '.avif,.jfif,.jfi,.jif,.jpg,.jpeg,.webp,.png,image/avif,image/jpeg,image/webp,image/png';
+
+const blurbs: Record<string, string> = {
+  'avif-to-png': 'Lossless PNG with transparency. Animated AVIF frame by frame, HDR tone-mapped.',
+  'avif-to-jpg': 'Small, universal JPG with a quality slider and a background colour for transparency.',
+  'jfif-to-jpg': 'A lossless rename: the .jfif you saved becomes a .jpg, byte for byte.',
+  'jfif-to-png': 'JFIF to PNG for editing and for tools that only take PNG.',
+  'webp-to-png': 'WebP to PNG with transparency kept; animated WebP split into frames.',
+};
+
+const features = [
+  {
+    title: 'Converted on your device',
+    body: 'Your browser decodes and encodes the images. Nothing is uploaded, so there is no queue, no server copy and no privacy policy to worry about.',
+  },
+  {
+    title: 'Animated AVIF, frame by frame',
+    body: 'Every frame of an animated AVIF or WebP is decoded. Keep the frames you want as separate images, or export one animated PNG.',
+  },
+  {
+    title: 'HDR handled on purpose',
+    body: 'HDR AVIF is tone-mapped to SDR by the converter itself, with a choice between keeping brightness and keeping colour — not clipped by accident.',
+  },
+  {
+    title: 'Batches without a paywall',
+    body: 'Fifty files per batch, fifty megabytes each, download as one ZIP. No account, no watermark, no daily quota.',
+  },
+];
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE.name,
+    url: SITE.url,
+    description,
+  },
+];
+---
+
+<Base title={title} description={description} path="/" jsonLd={jsonLd}>
+  <section class="band">
+    <div class="wrap reveal">
+      <p class="label">
+        <span>
+          <small>From</small>
+          <strong>.AVIF .JFIF .WEBP</strong>
+        </span>
+        <span>
+          <small>To</small>
+          <strong>.PNG .JPG</strong>
+        </span>
+        <span class="label-extra">
+          <small>Handling</small>
+          <strong>On your device</strong>
+        </span>
+        <span class="barcode" aria-hidden="true"></span>
+      </p>
+      <div class="hero-top">
+        <div>
+          <h1>
+            AVIF <em>converter</em>
+          </h1>
+          <p class="lede">Convert AVIF — and JFIF and WebP — to PNG or JPG. The work is done by your own browser, so your images are never uploaded.</p>
+        </div>
+      </div>
+
+      <div data-tool>
+        <Converter client:load sourceLabel="AVIF, JFIF or WebP" accept={accept} target="png" chooseTarget samples={SAMPLE_BUTTONS} />
+        <noscript>
+          <p class="note">The converter needs JavaScript, because your browser does the converting. Nothing is sent to a server.</p>
+        </noscript>
+      </div>
+
+      <ul class="stamps" aria-label="Why AVIFBox">
+        {STAMPS.map((stamp) => (
+          <li>
+            {stamp.title}
+            <small>{stamp.note}</small>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <article class="doc wrap">
+    <section id="converters">
+      <div class="sec-head">
+        <span class="sec-no">№ 01</span>
+        <h2>Pick a converter</h2>
+      </div>
+      <ul class="cards">
+        {tools.map((tool) => (
+          <li>
+            <a class="card" href={`/${tool.slug}`}>
+              <small>
+                {tool.from} → {tool.to}
+              </small>
+              <strong>{NAV.converters.find((link) => link.href === `/${tool.slug}`)?.label}</strong>
+              <span>{blurbs[tool.slug]}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section id="why">
+      <div class="sec-head">
+        <span class="sec-no">№ 02</span>
+        <h2>What is in the box</h2>
+      </div>
+      <ol class="steps">
+        {features.map((feature) => (
+          <li>
+            <h3>{feature.title}</h3>
+            <p>{feature.body}</p>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <Cards id="guides" number="№ 03" title="New to AVIF?" links={[RELATED.whatIsAvif, RELATED.openAvif]} />
+  </article>
+</Base>

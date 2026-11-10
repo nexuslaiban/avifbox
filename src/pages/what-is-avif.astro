@@ -1,0 +1,235 @@
+---
+import Base from '../layouts/Base.astro';
+import Faq from '../components/Faq.astro';
+import Cards from '../components/Cards.astro';
+import { RELATED } from '../content/site';
+import { articleSchema, faqSchema } from '../content/schema';
+import type { Faq as FaqEntry } from '../content/types';
+
+const path = '/what-is-avif';
+const title = 'What Is AVIF? The Image Format Explained | AVIFBox';
+const description =
+  'AVIF is a modern image format built on the AV1 video codec. What it is, what it can do, how it compares with JPG, PNG and WebP, and how to open or convert it.';
+
+const abilities: [string, string][] = [
+  ['Compression', 'Lossy and lossless, both from the AV1 codec'],
+  ['Colour depth', '8, 10 or 12 bits per channel'],
+  ['HDR', 'Yes — PQ and HLG, with wide colour gamut'],
+  ['Transparency', 'Yes, a full alpha channel'],
+  ['Animation', 'Yes, as an image sequence'],
+  ['File extension', '.avif'],
+  ['MIME type', 'image/avif'],
+  ['Licence', 'Royalty-free'],
+];
+
+const versus: [string, string, string, string, string][] = [
+  ['Released', '2019', '1992', '1996', '2010'],
+  ['Compression', 'Lossy or lossless', 'Lossy', 'Lossless', 'Lossy or lossless'],
+  ['Photo size at similar quality', 'Smallest', 'About twice AVIF', 'Many times larger', 'Between AVIF and JPG'],
+  ['Transparency', 'Yes', 'No', 'Yes', 'Yes'],
+  ['Animation', 'Yes', 'No', 'Yes (APNG)', 'Yes'],
+  ['HDR and 10-bit', 'Yes', 'No', '16-bit, HDR rarely supported', 'No'],
+  ['Opens everywhere', 'Not yet', 'Yes', 'Yes', 'Mostly'],
+];
+
+const faq: FaqEntry[] = [
+  {
+    question: 'Is AVIF better than JPG?',
+    answer:
+      'For file size, yes: an AVIF is typically about half the size of a JPG that looks the same, and it adds transparency, HDR and animation. JPG still wins on compatibility — it opens in everything.',
+  },
+  {
+    question: 'Is AVIF lossless?',
+    answer: 'It can be, but most AVIF files are lossy, because that is where the format saves the most space. The file itself does not say which it is.',
+  },
+  {
+    question: 'Does AVIF support transparency?',
+    answer: 'Yes. AVIF carries a full alpha channel, so it can replace PNG for logos and cut-outs where the software supports it.',
+  },
+  {
+    question: 'Who created AVIF?',
+    answer:
+      'The Alliance for Open Media, an industry group whose members include Google, Apple, Microsoft, Mozilla, Netflix and Amazon. The specification was published in February 2019.',
+  },
+  {
+    question: 'Is AVIF free to use?',
+    answer: 'Yes. The format and the AV1 codec underneath it are royalty-free, which is a large part of why browsers adopted them.',
+  },
+  {
+    question: 'How do I convert an AVIF file?',
+    answer:
+      'Use <a href="/avif-to-png">AVIF to PNG</a> for a lossless copy with transparency, or <a href="/avif-to-jpg">AVIF to JPG</a> for a small file that opens anywhere. Both run in your browser without uploading anything.',
+  },
+];
+
+const jsonLd = [articleSchema({ path, headline: 'What is AVIF?', description, published: '2026-11-11' }), faqSchema(faq)];
+---
+
+<Base title={title} description={description} path={path} jsonLd={jsonLd}>
+  <section class="band">
+    <div class="wrap reveal">
+      <p class="label">
+        <span>
+          <small>Guide</small>
+          <strong>File formats</strong>
+        </span>
+        <span>
+          <small>Subject</small>
+          <strong>.AVIF</strong>
+        </span>
+        <span class="barcode" aria-hidden="true"></span>
+      </p>
+      <h1>
+        What is <em>AVIF</em>?
+      </h1>
+      <p class="lede">
+        AVIF is an image format that makes pictures much smaller than JPG or PNG without making them look worse. It is why some images you save from the web end
+        in <code>.avif</code> — and why some programs refuse to open them.
+      </p>
+    </div>
+  </section>
+
+  <article class="doc wrap">
+    <section class="split">
+      <section id="short-answer">
+        <div class="sec-head">
+          <span class="sec-no">№ 01</span>
+          <h2>The short answer</h2>
+        </div>
+        <div class="prose">
+          <p>
+            AVIF stands for <strong>AV1 Image File Format</strong>. It stores a picture compressed with AV1 — a video codec — inside the same kind of container
+            that HEIC uses. In effect, an AVIF is a single, very well compressed video frame.
+          </p>
+          <p>
+            The format was published in 2019 by the Alliance for Open Media, whose members include Google, Apple, Microsoft, Mozilla, Netflix and Amazon. It is
+            royalty-free, which is why browsers adopted it quickly.
+          </p>
+          <p>
+            Websites use AVIF because it saves bandwidth: at the same visual quality an AVIF is roughly half the size of a JPG and noticeably smaller than a
+            WebP.
+          </p>
+        </div>
+      </section>
+
+      <section id="abilities">
+        <div class="sec-head">
+          <span class="sec-no">№ 02</span>
+          <h2>What AVIF can do</h2>
+        </div>
+        <div class="slip" tabindex="0" role="region" aria-label="AVIF at a glance">
+          <table>
+            <caption>AVIF at a glance</caption>
+            <tbody>
+              {abilities.map(([label, value]) => (
+                <tr>
+                  <th scope="row">{label}</th>
+                  <td>{value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <section id="compared">
+      <div class="sec-head">
+        <span class="sec-no">№ 03</span>
+        <h2>AVIF vs JPG, PNG and WebP</h2>
+      </div>
+      <div class="slip" tabindex="0" role="region" aria-label="AVIF compared with JPG, PNG and WebP">
+        <table>
+          <caption>AVIF compared with the formats it replaces</caption>
+          <thead>
+            <tr>
+              <td></td>
+              <th scope="col">AVIF</th>
+              <th scope="col">JPG</th>
+              <th scope="col">PNG</th>
+              <th scope="col">WebP</th>
+            </tr>
+          </thead>
+          <tbody>
+            {versus.map(([aspect, ...cells]) => (
+              <tr>
+                <th scope="row">{aspect}</th>
+                {cells.map((cell) => (
+                  <td>{cell}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="split">
+      <section id="support">
+        <div class="sec-head">
+          <span class="sec-no">№ 04</span>
+          <h2>Where AVIF works</h2>
+        </div>
+        <div class="prose">
+          <p>
+            <strong>Browsers.</strong> Chrome has read AVIF since version 85 (2020), Firefox since 93 (2021), Safari since 16 (2022) and Edge since 121 (2024).
+            Together that is about 95% of browsers in use.
+          </p>
+          <p>
+            <strong>Operating systems.</strong> macOS 13, iOS 16 and Android 12 and later open AVIF in their built-in apps. Windows 10 and 11 need the free AV1
+            Video Extension from the Microsoft Store.
+          </p>
+          <p>
+            <strong>Software.</strong> Photoshop reads AVIF from version 23.2 and GIMP from 2.10.22. Older editors, office suites, email clients and many upload
+            forms still reject it.
+          </p>
+          <p>
+            The practical steps for each system are in <a href="/how-to-open-avif-file">how to open an AVIF file</a>.
+          </p>
+        </div>
+      </section>
+
+      <section id="trade-offs">
+        <div class="sec-head">
+          <span class="sec-no">№ 05</span>
+          <h2>The trade-offs</h2>
+        </div>
+        <div class="prose">
+          <ul>
+            <li>
+              <strong>Compatibility.</strong> The reason most people go looking for a converter: plenty of software has never heard of AVIF.
+            </li>
+            <li>
+              <strong>Slow to create.</strong> Encoding an AVIF takes far longer than saving a JPG. Viewing one is fast.
+            </li>
+            <li>
+              <strong>Smoothing.</strong> At very small file sizes AVIF blurs fine texture, such as skin and foliage, rather than showing blocks.
+            </li>
+            <li>
+              <strong>No going back.</strong> Converting a lossy AVIF to another format cannot recover the detail it dropped, although nothing more is lost if
+              the target is lossless.
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="convert">
+        <div class="sec-head">
+          <span class="sec-no">№ 06</span>
+          <h2>Opening and converting AVIF</h2>
+        </div>
+        <div class="prose">
+          <p>
+            If an AVIF will not open, or a website will not accept it, convert it. <a href="/avif-to-png">AVIF to PNG</a> gives a lossless copy and keeps
+            transparency; it also splits animated AVIF into frames and tone-maps HDR. <a href="/avif-to-jpg">AVIF to JPG</a> gives the smallest file that opens
+            everywhere.
+          </p>
+          <p>Both converters run in your browser. The image is decoded on your own device and never uploaded.</p>
+        </div>
+      </section>
+    </section>
+
+    <Faq number="№ 07" entries={faq} />
+    <Cards id="related" number="№ 08" title="More from the box" links={[RELATED.avifToPng, RELATED.avifToJpg, RELATED.openAvif, RELATED.webpToPng]} />
+  </article>
+</Base>

@@ -1,0 +1,216 @@
+---
+import Base from '../layouts/Base.astro';
+import Converter from '../ui/Converter';
+import Samples from '../components/Samples.astro';
+import Faq from '../components/Faq.astro';
+import Cards from '../components/Cards.astro';
+import { faqSchema, plain } from '../content/schema';
+import { tools } from '../content/tools';
+import { LIMITS, SITE, STAMPS } from '../content/site';
+import { SAMPLE_BUTTONS } from '../content/samples';
+import type { ToolPage } from '../content/types';
+
+export function getStaticPaths() {
+  return tools.map((tool) => ({ params: { tool: tool.slug }, props: { tool } }));
+}
+
+interface Props {
+  tool: ToolPage;
+}
+
+const { tool } = Astro.props;
+const path = `/${tool.slug}`;
+const name = `${SITE.name} ${plain(tool.h1)}`;
+
+const facts: [string, string][] = [
+  ['Price', 'Free — no account, no watermark, no quota'],
+  ['Works in', 'Chrome, Edge, Firefox and Safari, on desktop and mobile'],
+  ['Input', tool.input],
+  ['Output', tool.output],
+  ['Batch size', LIMITS],
+  ['Processing', 'On your device; nothing is uploaded'],
+  ['Metadata', tool.metadata],
+];
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name,
+    url: `${SITE.url}${path}`,
+    description: tool.description,
+    applicationCategory: 'MultimediaApplication',
+    operatingSystem: 'Any — runs in the web browser',
+    browserRequirements: 'Requires JavaScript and a current version of Chrome, Edge, Firefox or Safari',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    featureList: facts.map(([label, value]) => `${label}: ${value}`),
+  },
+  faqSchema(tool.faq),
+];
+
+const number = (index: number) => `№ ${String(index).padStart(2, '0')}`;
+// Sections are numbered in reading order: how-to, comparison, the prose sections, then the rest.
+const proseStart = 3;
+let next = proseStart + tool.sections.length;
+const samplesNo = tool.samples ? next++ : 0;
+const faqNo = next++;
+const factsNo = next++;
+---
+
+<Base title={tool.title} description={tool.description} path={path} jsonLd={jsonLd}>
+  <section class="band">
+    <div class="wrap reveal">
+      <p class="label">
+        <span>
+          <small>From</small>
+          <strong>{tool.from}</strong>
+        </span>
+        <span>
+          <small>To</small>
+          <strong>{tool.to}</strong>
+        </span>
+        <span class="label-extra">
+          <small>Handling</small>
+          <strong>On your device</strong>
+        </span>
+        <span class="barcode" aria-hidden="true"></span>
+      </p>
+      <div class="hero-top">
+        <div>
+          <h1 set:html={tool.h1} />
+          <p class="lede">{tool.lede}</p>
+        </div>
+        {tool.sibling && (
+          <nav class="tabs" aria-label="Output format">
+            {[
+              { label: tool.target.toUpperCase(), href: undefined },
+              { label: tool.sibling.label, href: tool.sibling.href },
+            ]
+              .sort((a, b) => b.label.localeCompare(a.label))
+              .map((tab) =>
+                tab.href ? (
+                  <a href={tab.href}>
+                    <small>Convert to</small>
+                    {tab.label}
+                  </a>
+                ) : (
+                  <span aria-current="page">
+                    <small>Convert to</small>
+                    {tab.label}
+                  </span>
+                ),
+              )}
+          </nav>
+        )}
+      </div>
+
+      <div data-tool>
+        <Converter
+          client:load
+          sourceLabel={tool.sourceLabel}
+          accept={tool.accept}
+          target={tool.target}
+          offerKeepJpeg={tool.offerKeepJpeg}
+          samples={tool.sourceLabel === 'AVIF' ? SAMPLE_BUTTONS : undefined}
+        />
+        <noscript>
+          <p class="note">The converter needs JavaScript, because your browser does the converting. Nothing is sent to a server.</p>
+        </noscript>
+      </div>
+
+      <ul class="stamps" aria-label="Why AVIFBox">
+        {STAMPS.map((stamp) => (
+          <li>
+            {stamp.title}
+            <small>{stamp.note}</small>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <article class="doc wrap">
+    <section id="how-to">
+      <div class="sec-head">
+        <span class="sec-no">{number(1)}</span>
+        <h2>{tool.howToTitle}</h2>
+      </div>
+      <ol class="steps">
+        {tool.steps.map((step) => (
+          <li>
+            <h3>{step.title}</h3>
+            <p set:html={step.body} />
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section id="compare">
+      <div class="sec-head">
+        <span class="sec-no">{number(2)}</span>
+        <h2>
+          {tool.comparison.columns[0]} vs {tool.comparison.columns[1]}
+        </h2>
+      </div>
+      <div class="slip" tabindex="0" role="region" aria-label={tool.comparison.caption}>
+        <table>
+          <caption>{tool.comparison.caption}</caption>
+          <thead>
+            <tr>
+              <td></td>
+              <th scope="col">{tool.comparison.columns[0]}</th>
+              <th scope="col">{tool.comparison.columns[1]}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {tool.comparison.rows.map(([aspect, left, right]) => (
+              <tr>
+                <th scope="row">{aspect}</th>
+                <td>{left}</td>
+                <td>{right}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="split">
+      {tool.sections.map((section, index) => (
+        <section id={section.id}>
+          <div class="sec-head">
+            <span class="sec-no">{number(proseStart + index)}</span>
+            <h2>{section.title}</h2>
+          </div>
+          <div class="prose">{section.body.map((block) => (block.startsWith('<ul') ? <Fragment set:html={block} /> : <p set:html={block} />))}</div>
+        </section>
+      ))}
+    </section>
+
+    {tool.samples && <Samples number={number(samplesNo)} />}
+
+    <Faq number={number(faqNo)} entries={tool.faq} />
+
+    <section id="details">
+      <div class="sec-head">
+        <span class="sec-no">{number(factsNo)}</span>
+        <h2>Packing list</h2>
+      </div>
+      <div class="slip" tabindex="0" role="region" aria-label="Converter details">
+        <table>
+          <caption>{name}— details</caption>
+          <tbody>
+            {facts.map(([label, value]) => (
+              <tr>
+                <th scope="row">{label}</th>
+                <td>{value}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <Cards id="related" number={number(factsNo + 1)} title="More from the box" links={tool.related} />
+  </article>
+</Base>

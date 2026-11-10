@@ -1,0 +1,106 @@
+---
+import '@fontsource-variable/big-shoulders-display';
+import '@fontsource-variable/atkinson-hyperlegible-next';
+import '@fontsource-variable/atkinson-hyperlegible-mono';
+import '../styles/global.css';
+import { NAV, SITE } from '../content/site';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Site-relative path of the page, e.g. `/avif-to-png`. */
+  path: string;
+  jsonLd?: object[];
+  noindex?: boolean;
+}
+
+const { title, description, path, jsonLd = [], noindex = false } = Astro.props;
+const canonical = new URL(path, SITE.url).href;
+const current = (href: string) => (href === path ? 'page' : undefined);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#d8c49c" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#241d13" media="(prefers-color-scheme: dark)" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={`${SITE.url}/og.png`} />
+    <meta name="twitter:card" content="summary_large_image" />
+    {jsonLd.map((data) => (
+      <script type="application/ld+json" is:inline set:html={JSON.stringify(data)} />
+    ))}
+  </head>
+  <body>
+    <div class="tape" aria-hidden="true"></div>
+    <header class="site-header">
+      <div class="wrap">
+        <a class="brand" href="/" aria-label={`${SITE.name} home`}>
+          <svg viewBox="0 0 32 32" aria-hidden="true">
+            <path d="M3 10.5 16 4l13 6.5v11L16 28 3 21.5z" fill="var(--accent)" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"></path>
+            <path d="M3 10.5 16 17l13-6.5M16 17v11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"></path>
+          </svg>
+          <span>
+            AVIF<b>Box</b>
+          </span>
+        </a>
+        <nav class="site-nav" aria-label="Converters and guides">
+          <ul>
+            {[...NAV.converters, ...NAV.guides].map((link) => (
+              <li>
+                <a href={link.href} aria-current={current(link.href)}>
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap">
+        <div>
+          <h2>{SITE.name}</h2>
+          <p>{SITE.tagline}. Your files are converted on your own device and are never uploaded.</p>
+        </div>
+        <nav aria-label="Converters">
+          <h2>Converters</h2>
+          <ul>
+            {NAV.converters.map((link) => (
+              <li>
+                <a href={link.href}>{link.label}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <nav aria-label="Guides">
+          <h2>Guides</h2>
+          <ul>
+            {NAV.guides.map((link) => (
+              <li>
+                <a href={link.href}>{link.label}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <p class="fine">No cookies, no tracking, no ads. AVIF decoding for HDR images uses libavif, © Alliance for Open Media and jSquash contributors.</p>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,30 @@
+---
+import type { Related } from '../content/types';
+
+interface Props {
+  id: string;
+  number: string;
+  title: string;
+  links: Related[];
+}
+
+const { id, number, title, links } = Astro.props;
+---
+
+<section id={id}>
+  <div class="sec-head">
+    <span class="sec-no">{number}</span>
+    <h2>{title}</h2>
+  </div>
+  <ul class="cards">
+    {links.map((link) => (
+      <li>
+        <a class="card" href={link.href}>
+          <small>{link.kind}</small>
+          <strong>{link.label}</strong>
+          <span>{link.note}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</section>

@@ -78,7 +78,14 @@ describe('encodePng (AC-16)', () => {
   });
 
   it('writes no colour profile unless asked', async () => {
-    const png = await bytesOf(await encodePng(image(2, 2, () => [1, 2, 3, 255]), 2, 2, { mode: 'truecolor' }));
+    const png = await bytesOf(
+      await encodePng(
+        image(2, 2, () => [1, 2, 3, 255]),
+        2,
+        2,
+        { mode: 'truecolor' },
+      ),
+    );
     expect(types(png)).not.toContain('iCCP');
   });
 

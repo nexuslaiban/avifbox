@@ -224,8 +224,14 @@ function crc32(crc: number, data: Uint8Array): number {
 /** A chunk as separate parts (length+type, payload pieces, CRC) so large payloads are never copied. */
 function chunk(type: string, ...payload: Uint8Array[]): Uint8Array[] {
   const head = new Uint8Array(8);
-  new DataView(head.buffer).setUint32(0, payload.reduce((n, p) => n + p.length, 0));
-  head.set([...type].map((c) => c.charCodeAt(0)), 4);
+  new DataView(head.buffer).setUint32(
+    0,
+    payload.reduce((n, p) => n + p.length, 0),
+  );
+  head.set(
+    [...type].map((c) => c.charCodeAt(0)),
+    4,
+  );
   let crc = crc32(0xffffffff, head.subarray(4));
   for (const p of payload) crc = crc32(crc, p);
   return [head, ...payload, uint32((crc ^ 0xffffffff) >>> 0)];
