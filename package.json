@@ -1,0 +1,47 @@
+{
+  "name": "avifbox",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "avifbox.com — image converters that run entirely in the browser",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=22.23.4"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "fixtures": "node scripts/make-fixtures.mjs",
+    "samples": "node scripts/make-samples.mjs"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": []
+  },
+  "dependencies": {
+    "@astrojs/preact": "^6.1.4",
+    "@astrojs/sitemap": "^3.7.4",
+    "@fontsource-variable/atkinson-hyperlegible-mono": "^5.3.0",
+    "@fontsource-variable/atkinson-hyperlegible-next": "^5.3.0",
+    "@fontsource-variable/big-shoulders-display": "^5.3.0",
+    "@jsquash/avif": "^2.1.1",
+    "astro": "^7.4.10",
+    "client-zip": "^2.5.1",
+    "preact": "^11.2.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.6",
+    "@types/pngjs": "^6.0.5",
+    "fflate": "^0.8.3",
+    "jpeg-js": "^0.4.4",
+    "pngjs": "^7.0.0",
+    "typescript": "^6.0.3",
+    "vitest": "^5.1.0"
+  }
+}
