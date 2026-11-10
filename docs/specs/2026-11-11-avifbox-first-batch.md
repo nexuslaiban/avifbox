@@ -10,12 +10,12 @@ browser; hosting is a static CDN.
 
 **Pages (8 + 404)**
 
-| Route | Role |
-|---|---|
-| `/` | Hub. Generic converter (any supported input → PNG or JPG); absorbs "avif converter" intent |
-| `/avif-to-png` | Flagship tool page, site hub for AVIF pages |
-| `/avif-to-jpg`, `/jfif-to-png`, `/jfif-to-jpg`, `/webp-to-png` | First-batch tool pages, same engine |
-| `/what-is-avif`, `/how-to-open-avif-file` | Measured support pages; link targets of the first batch. The latter embeds an AVIF viewer |
+| Route                                                          | Role                                                                                       |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `/`                                                            | Hub. Generic converter (any supported input → PNG or JPG); absorbs "avif converter" intent |
+| `/avif-to-png`                                                 | Flagship tool page, site hub for AVIF pages                                                |
+| `/avif-to-jpg`, `/jfif-to-png`, `/jfif-to-jpg`, `/webp-to-png` | First-batch tool pages, same engine                                                        |
+| `/what-is-avif`, `/how-to-open-avif-file`                      | Measured support pages; link targets of the first batch. The latter embeds an AVIF viewer  |
 
 **Engine** (Web Worker pool, no server): probe → decode → encode.
 
@@ -24,7 +24,7 @@ browser; hosting is a static CDN.
 - Encode: own PNG/APNG writer (truecolor lossless, or ≤256-colour palette "Optimized"), canvas JPEG.
 - Animated sources (AVIF sequence, animated WebP): every frame as its own PNG/JPG with a per-frame
   picker, or one animated PNG (APNG).
-- HDR (PQ/HLG `nclx`): own tone mapping to 8-bit SDR, two modes — *Keep brightness*, *Keep colour*.
+- HDR (PQ/HLG `nclx`): own tone mapping to 8-bit SDR, two modes — _Keep brightness_, _Keep colour_.
 - Optional Display P3 output (ICC profile embedded) instead of sRGB.
 - Limits: 50 files per batch, 50 MB per file. No pixel cap for PNG output.
 
@@ -47,20 +47,20 @@ Each criterion maps 1:1 to a test. `E` = Playwright against the built site, `U` 
   opaque area). When a background colour is chosen, then every output pixel is opaque.
 - **AC-03** (E) Given `alpha.avif` on `/avif-to-jpg`, then the output is a JPEG whose transparent area
   is the matte colour (white by default), and quality 50 yields a smaller file than quality 95.
-- **AC-04** (E) Given `photo.avif` (>256 colours), when *Optimized* is selected, then the PNG is
-  palette-based (colour type 3) and smaller than the *Truecolor* output of the same file.
+- **AC-04** (E) Given `photo.avif` (>256 colours), when _Optimized_ is selected, then the PNG is
+  palette-based (colour type 3) and smaller than the _Truecolor_ output of the same file.
 - **AC-05** (E) Given `anim.avif` (5 frames, 200 ms each), then five outputs `anim-001.png … anim-005.png`
-  appear; unticking one frame removes it from the ZIP; choosing *Animated PNG* yields one APNG with
-  `acTL.num_frames = 5` and 200 ms frame delays.
+  appear; unticking one frame removes it from the ZIP; choosing _Animated PNG_ yields one APNG with
+  `acTL.num_frames = 5` and 200 ms frame delays. An animated WebP is split into frames the same way.
 - **AC-06** (E) Given `hdr-pq.avif` (10-bit, BT.2020 PQ), then the row is flagged HDR, the neutral
-  patches match the documented tone curve within ±2 levels, and *Keep brightness* and *Keep colour*
+  patches match the documented tone curve within ±2 levels, and _Keep brightness_ and _Keep colour_
   give different pixels on the saturated highlight patch.
-- **AC-07** (E) Given *Display P3* output, then the PNG carries an `iCCP` chunk; with sRGB it carries none.
+- **AC-07** (E) Given _Display P3_ output, then the PNG carries an `iCCP` chunk; with sRGB it carries none.
 - **AC-08** (E) Given `photo.jfif` on `/jfif-to-jpg`, then the output is `photo.jpg` with bytes identical
-  to the input (lossless rename). When *Re-encode* is chosen, then the bytes differ and it is a valid JPEG.
+  to the input (lossless rename). When _Re-encode_ is chosen, then the bytes differ and it is a valid JPEG.
 - **AC-09** (E) Given `photo.jfif` on `/jfif-to-png` and `lossless.webp` on `/webp-to-png`, then PNGs are
   produced with the source dimensions; the WebP result equals the reference exactly.
-- **AC-10** (E) Given three files, two of them with the same name, when *Download all* is clicked, then
+- **AC-10** (E) Given three files, two of them with the same name, when _Download all_ is clicked, then
   a ZIP with three uniquely named entries is downloaded.
 - **AC-11** (E) Given 51 files, then 50 are queued and a notice reports 1 skipped. (U) A file over
   50 MB is rejected with a reason.
@@ -72,8 +72,8 @@ Each criterion maps 1:1 to a test. `E` = Playwright against the built site, `U` 
 
 ### Engine units
 
-- **AC-15** (U) `probe` reads format, dimensions, bit depth, alpha, animation, CICP and HDR from real
-  fixtures (AVIF, WebP, JPEG/JFIF, PNG) and rejects non-images.
+- **AC-15** (U) `probe` reads format, bit depth, animation, CICP and HDR from real fixtures (AVIF, WebP,
+  JPEG/JFIF, PNG), survives malformed containers, and rejects non-images.
 - **AC-16** (U) PNG writer: output round-trips through a reference decoder for RGBA, RGB and palette
   images; opaque input is written without an alpha channel; ≤256 unique colours are written as an
   exact palette; APNG carries `acTL`/`fcTL`/`fdAT` with correct sequence numbers; ICC is embedded on request.
@@ -81,12 +81,11 @@ Each criterion maps 1:1 to a test. `E` = Playwright against the built site, `U` 
   gradient keeps PSNR ≥ 35 dB.
 - **AC-18** (U) HDR math: PQ and HLG EOTF hit their reference points (PQ 0.5081 → 100 nits, 0.7518 →
   1000 nits; HLG 0.75 → 203 nits at a 1000-nit peak); the tone curve is the identity below its knee,
-  monotonic, and maps the source peak to SDR white; *Keep colour* preserves channel ratios; *Keep
-  brightness* preserves luminance.
+  monotonic, and maps the source peak to SDR white; _Keep colour_ preserves channel ratios; _Keep
+  brightness_ preserves luminance.
 - **AC-19** (U) Decoder routing: HDR → WASM tone-mapped path; AVIF that the browser fails to decode →
   WASM 8-bit path; a non-AVIF failure is reported as an error.
-- **AC-20** (U) Output naming: extension swap, de-duplication, frame numbering, ZIP folder per
-  animated input.
+- **AC-20** (U) Output naming: extension swap, de-duplication, frame numbering.
 
 ### Site
 
@@ -114,3 +113,24 @@ Each criterion maps 1:1 to a test. `E` = Playwright against the built site, `U` 
   screen are measured, never estimated.
 - **HDR detection reads the container `colr`/`nclx` box only.** A file that signals HDR solely in the
   AV1 bitstream falls back to the browser's own rendering.
+- **Animation, HDR and colour-profile options stay collapsed** and are flagged "used by your files"
+  when relevant. Expanding them automatically moved the results away from under the pointer.
+
+## Known limits
+
+- **Safari** cannot step through animation frames (`ImageDecoder` is not available to pages there), so
+  the first frame is converted and the row says so. Safari itself is untested: Playwright's WebKit
+  build does not start on the development machine.
+- **Firefox** has no Display P3 canvas, so that option is disabled with an explanation. It also reads
+  wide-gamut `nclx` AVIF without converting to sRGB; the tool passes on what the browser decodes.
+- The WASM decoder (HDR stills, and browsers without AVIF support) ignores the `irot`, `imir` and
+  `clap` container transforms. An HDR file that relies on them comes out unrotated.
+- An animated HDR sequence is decoded by the browser, with the browser's tone mapping; the row reports
+  "rendered by browser".
+- JPG output is limited by the browser's canvas size; PNG output is not.
+
+## Revision history
+
+- 2026-11-11 — AC-15: dropped dimensions and alpha from `probe`; nothing needs them before decoding.
+  AC-20: dropped the per-animation ZIP folder; frame names already carry the source name, and a flat
+  archive is simpler to use. AC-05: animated WebP added. Conversion tests also run in Firefox.
