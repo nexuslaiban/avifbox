@@ -7,6 +7,8 @@ import {
   downloadLink,
   downloadNamed,
   dropFiles,
+  expectSameBytes,
+  expectSamePixels,
   fileRows,
   fixtureBytes,
   inflateSync,
@@ -34,7 +36,7 @@ test.describe('AVIF to PNG', () => {
     await settled(page, 1);
     const png = readPng(await downloadNamed(page, 'still.png'));
     expect([png.width, png.height]).toEqual([64, 48]);
-    expect(png.data).toEqual(reference().data);
+    expectSamePixels(png, reference(), 'still.png');
   });
 
   test('AC-02 transparency is kept, or filled when a background is chosen', async ({ page }) => {
@@ -75,7 +77,7 @@ test.describe('AVIF to PNG', () => {
     const first = readPng(await downloadNamed(page, 'anim-001.png'));
     const last = readPng(await downloadNamed(page, 'anim-005.png'));
     expect([first.width, first.height]).toEqual([64, 48]);
-    expect(first.data).not.toEqual(last.data);
+    expect(Buffer.from(first.data).equals(last.data), 'the first and the last frame are the same picture').toBe(false);
 
     await page.getByRole('checkbox', { name: 'Frame 3', exact: true }).uncheck();
     const zip = zipEntries((await download(page, page.getByRole('button', { name: /Download all/ }))).bytes);
@@ -180,7 +182,7 @@ test.describe('AVIF to PNG', () => {
     expect(zip.name).toMatch(/\.zip$/);
     const entries = zipEntries(zip.bytes);
     expect(Object.keys(entries).sort()).toEqual(['photo.png', 'still (2).png', 'still.png']);
-    expect(readPng(Buffer.from(entries['still.png'])).data).toEqual(reference().data);
+    expectSamePixels(readPng(Buffer.from(entries['still.png'])), reference(), 'still.png in the ZIP');
     expect(readPng(Buffer.from(entries['still (2).png'])).at(40, 40)[3]).toBe(0);
   });
 
@@ -208,7 +210,7 @@ test.describe('AVIF to PNG', () => {
     test.skip(browserName === 'firefox', 'a scripted paste event cannot carry files in Firefox');
     await pasteFiles(page, 'still.avif');
     await settled(page, 1);
-    expect(readPng(await downloadNamed(page, 'still.png')).data).toEqual(reference().data);
+    expectSamePixels(readPng(await downloadNamed(page, 'still.png')), reference(), 'the pasted still.png');
   });
 
   test('AC-13 nothing leaves the browser', async ({ page, baseURL }) => {
@@ -362,12 +364,12 @@ test.describe('other tools', () => {
     await addFiles(page, 'photo.jfif');
     await settled(page, 1);
     const original = fixtureBytes('photo.jfif');
-    expect(await downloadNamed(page, 'photo.jpg')).toEqual(original);
+    expectSameBytes(await downloadNamed(page, 'photo.jpg'), original, 'photo.jpg, renamed only');
 
     await page.getByRole('radio', { name: 'Re-encode' }).check();
     await settled(page, 1);
     const reencoded = await downloadNamed(page, 'photo.jpg');
-    expect(reencoded).not.toEqual(original);
+    expect(reencoded.equals(original), 're-encoding left the file as it was').toBe(false);
     expect([readJpeg(reencoded).width, readJpeg(reencoded).height]).toEqual([320, 240]);
   });
 
@@ -381,7 +383,7 @@ test.describe('other tools', () => {
     await page.goto('/webp-to-png');
     await addFiles(page, 'lossless.webp');
     await settled(page, 1);
-    expect(readPng(await downloadNamed(page, 'lossless.png')).data).toEqual(reference().data);
+    expectSamePixels(readPng(await downloadNamed(page, 'lossless.png')), reference(), 'lossless.png');
   });
 
   test('AC-36 WebP to JPG: a still becomes a JPEG, an animation one JPG per frame', async ({ page }) => {
@@ -438,7 +440,7 @@ test.describe('other tools', () => {
     await page.goto('/');
     await addFiles(page, 'still.avif');
     await settled(page, 1);
-    expect(readPng(await downloadNamed(page, 'still.png')).data).toEqual(reference().data);
+    expectSamePixels(readPng(await downloadNamed(page, 'still.png')), reference(), 'still.png from the home page');
     await page.getByRole('radio', { name: 'JPG', exact: true }).check();
     await settled(page, 1);
     expect(readJpeg(await downloadNamed(page, 'still.jpg')).width).toBe(64);

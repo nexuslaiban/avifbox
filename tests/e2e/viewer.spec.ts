@@ -3,7 +3,16 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { formatBytes } from '../../src/ui/format';
-import { addFiles, download, downloadNamed, fixtureBytes, readJpeg, readPng, settled } from './helpers';
+import {
+  addFiles,
+  download,
+  downloadNamed,
+  expectSameBytes,
+  fixtureBytes,
+  readJpeg,
+  readPng,
+  settled,
+} from './helpers';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const VIEWER = '/avif-viewer';
@@ -68,7 +77,7 @@ test.describe('viewer', () => {
     await settled(page, 1);
     const first = await downloadNamed(page, 'anim-001.png');
     const second = await downloadNamed(page, 'anim-002.png');
-    expect(second).not.toEqual(first);
+    expect(second.equals(first), 'frames 1 and 2 are the same file').toBe(false);
     await page.getByRole('radio', { name: 'JPG', exact: true }).check();
     await settled(page, 1);
     const secondJpg = await downloadNamed(page, 'anim-002.jpg');
@@ -100,10 +109,10 @@ test.describe('viewer', () => {
 
     const png = await download(page, save(page, 'PNG'));
     expect(png.name).toBe('anim-002.png');
-    expect(png.bytes).toEqual(second);
+    expectSameBytes(png.bytes, second, 'frame 2 saved as PNG');
     const jpg = await download(page, save(page, 'JPG'));
     expect(jpg.name).toBe('anim-002.jpg');
-    expect(jpg.bytes).toEqual(secondJpg);
+    expectSameBytes(jpg.bytes, secondJpg, 'frame 2 saved as JPG');
 
     await play.click();
     await expect(moving).toBeVisible();

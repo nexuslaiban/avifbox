@@ -127,6 +127,19 @@ export async function downloadNamed(page: Page, name: string): Promise<Buffer> {
   return file.bytes;
 }
 
+/**
+ * Whole files are compared with this, never with `toEqual`: when two large buffers differ, that spends
+ * minutes building a diff which no test timeout can interrupt, and the run hangs instead of failing.
+ */
+export function expectSameBytes(actual: Buffer, expected: Buffer, what: string): void {
+  if (actual.equals(expected)) return;
+  let at = 0;
+  while (at < actual.length && actual[at] === expected[at]) at++;
+  throw new Error(
+    `${what}: ${actual.length} bytes, expected the same ${expected.length} bytes; the first difference is at byte ${at}`,
+  );
+}
+
 export interface Raster {
   width: number;
   height: number;
@@ -134,8 +147,20 @@ export interface Raster {
   at(x: number, y: number): number[];
 }
 
-function raster(width: number, height: number, data: Uint8Array): Raster {
+export function raster(width: number, height: number, data: Uint8Array): Raster {
   return { width, height, data, at: (x, y) => Array.from(data.subarray((y * width + x) * 4, (y * width + x) * 4 + 4)) };
+}
+
+/** Whole images are compared with this, for the reason given at `expectSameBytes`. */
+export function expectSamePixels(actual: Raster, expected: Raster, what: string): void {
+  const size = (image: Raster) => `${image.width} × ${image.height}`;
+  if (size(actual) !== size(expected)) throw new Error(`${what}: ${size(actual)}, expected ${size(expected)}`);
+  const [got, want] = [actual.data, expected.data];
+  let differing = 0;
+  for (let i = 0; i < want.length; i += 4)
+    if (got[i] !== want[i] || got[i + 1] !== want[i + 1] || got[i + 2] !== want[i + 2] || got[i + 3] !== want[i + 3])
+      differing++;
+  if (differing) throw new Error(`${what}: ${differing} of ${want.length / 4} pixels differ`);
 }
 
 export function readPng(bytes: Buffer): Raster {

@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { SOURCES } from '../../src/content/sources';
 import { PNG } from 'pngjs';
 import { formatBytes } from '../../src/ui/format';
-import { addFiles, downloadNamed, settled } from './helpers';
+import { addFiles, downloadNamed, expectSameBytes, settled } from './helpers';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const ORIGIN = 'https://avifbox.com';
@@ -294,8 +294,10 @@ test.describe('site structure', () => {
       buffer: readFileSync(join(ROOT, 'public', 'samples', 'transparent.avif')),
     });
     await settled(page, 1);
-    expect(await downloadNamed(page, 'transparent.png')).toEqual(
+    expectSameBytes(
+      await downloadNamed(page, 'transparent.png'),
       readFileSync(join(ROOT, 'public', 'samples', 'transparent.png')),
+      'transparent.png, converted again',
     );
   });
 
