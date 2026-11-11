@@ -192,6 +192,18 @@ test.describe('AVIF to PNG', () => {
     await settled(page, 50);
   });
 
+  // goto() returns before the converter has hydrated; an event sent in that gap used to be lost.
+  test('AC-12 a paste is not lost when the converter script arrives late', async ({ page, browserName }) => {
+    test.skip(browserName === 'firefox', 'a scripted paste event cannot carry files in Firefox');
+    await page.route('**/_astro/Converter.*.js', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await route.continue();
+    });
+    await page.goto('/avif-to-png');
+    await pasteFiles(page, 'still.avif');
+    await settled(page, 1);
+  });
+
   test('AC-12 an image pasted from the clipboard is converted', async ({ page, browserName }) => {
     test.skip(browserName === 'firefox', 'a scripted paste event cannot carry files in Firefox');
     await pasteFiles(page, 'still.avif');

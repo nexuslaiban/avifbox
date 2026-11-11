@@ -30,7 +30,26 @@ export function upload(fixture: string, as = fixture): Upload {
   return { name: as, mimeType: MIME[fixture.split('.').pop()!], buffer: fixtureBytes(fixture) };
 }
 
+/** Resolves once every converter or viewer on the page has hydrated: Astro then drops the island's `ssr` attribute. */
+async function hydrated(page: Page): Promise<void> {
+  await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
+}
+
+/**
+ * Resolves once the converter takes drops and pastes anywhere on the page. It attaches those
+ * listeners in an effect, a moment after hydrating, and goto() waits for neither. The probe is a
+ * dragover carrying a file: the converter accepts it, and nothing else on the page does.
+ */
+async function listening(page: Page): Promise<void> {
+  await page.waitForFunction(() => {
+    const transfer = new DataTransfer();
+    transfer.items.add(new File([], 'probe'));
+    return !document.dispatchEvent(new DragEvent('dragover', { dataTransfer: transfer, cancelable: true }));
+  });
+}
+
 export async function addFiles(page: Page, ...files: (string | Upload)[]): Promise<void> {
+  await hydrated(page);
   await page
     .locator('input[type=file]')
     .first()
@@ -50,6 +69,7 @@ async function dataTransfer(page: Page, files: Upload[]) {
 }
 
 export async function dropFiles(page: Page, target: Locator, ...fixtures: string[]): Promise<void> {
+  await listening(page);
   const transfer = await dataTransfer(
     page,
     fixtures.map((f) => upload(f)),
@@ -58,6 +78,7 @@ export async function dropFiles(page: Page, target: Locator, ...fixtures: string
 }
 
 export async function pasteFiles(page: Page, ...fixtures: string[]): Promise<void> {
+  await listening(page);
   const transfer = await dataTransfer(
     page,
     fixtures.map((f) => upload(f)),
