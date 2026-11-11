@@ -62,22 +62,11 @@ const footerGroups = [
     <header class="site-header">
       <div class="wrap">
         <a class="brand" href="/" aria-label={`${SITE.name} home`}>
-          <svg viewBox="0 0 32 32" aria-hidden="true">
-            <path
-              d="M3 10.5 16 4l13 6.5v11L16 28 3 21.5z"
-              fill="var(--accent)"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linejoin="round"
-            ></path>
-            <path
-              d="M3 10.5 16 17l13-6.5M16 17v11"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linejoin="round"
-            ></path>
-          </svg>
+          {/* A file with a fixed address, not inline SVG: other sites and crawlers can fetch it. */}
+          <picture>
+            <source srcset="/logo-dark.svg" media="(prefers-color-scheme: dark)" />
+            <img src="/logo.svg" alt={SITE.name} width="32" height="32" />
+          </picture>
           <span>
             AVIF<b>Box</b>
           </span>

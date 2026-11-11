@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <title>AVIFBox</title>
+  <g stroke="#1b1712" stroke-width="2.4" stroke-linejoin="round">
+    <path d="M3 10.5 16 4l13 6.5v11L16 28 3 21.5z" fill="#c8330f"/>
+    <path d="M3 10.5 16 17l13-6.5M16 17v11" fill="none"/>
+  </g>
+</svg>

@@ -262,7 +262,8 @@ img {
   text-decoration: none;
 }
 
-.brand svg {
+.brand img {
+  display: block;
   width: 2rem;
   height: 2rem;
 }

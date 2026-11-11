@@ -84,8 +84,11 @@ All `E` (Playwright against the built site).
   and the home page keep reading the list; only the header groups it.
 - **The logo keeps a fixed URL** (`public/logo.svg`, cached for a day) instead of a hashed asset: a
   directory listing or a crawler needs an address that does not change. Cost: one cached request
-  where there was none. The file carries its own light and dark colours, since an `<img>` cannot
-  read the page's CSS variables.
+  where there was none.
+- **`/logo.svg` has fixed colours.** The first plan was one file that switched colours with a media
+  query inside it; such a file follows the colour scheme of whoever looks at it, so on someone
+  else's white page a visitor in dark mode would get the pale outline. The header swaps in
+  `/logo-dark.svg` through `<picture>` instead (revised 2026-11-11, before implementation).
 - **`/avif-to-apng` writes `.png`.** That is what the engine already does and what software expects;
   the page says so.
 - **The viewer runs the engine once per file** (PNG, every frame). That one job feeds the frame

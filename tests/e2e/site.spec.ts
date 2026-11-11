@@ -4,6 +4,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SOURCES } from '../../src/content/sources';
+import { PNG } from 'pngjs';
 import { formatBytes } from '../../src/ui/format';
 import { addFiles, downloadNamed, settled } from './helpers';
 
@@ -372,6 +373,40 @@ test.describe('header menu', () => {
       await expect(guides.locator('a').first()).toBeHidden();
     });
   });
+});
+
+test.describe('logo', () => {
+  test('AC-35 the header mark is an image file with a size, served as SVG', async ({ page, request }) => {
+    for (const path of PAGES) {
+      await page.goto(path);
+      const mark = page.locator('.site-header .brand img');
+      await expect(mark, path).toHaveCount(1);
+      await expect(mark).toHaveAttribute('src', '/logo.svg');
+      await expect(mark).toHaveAttribute('alt', 'AVIFBox');
+      await expect(mark).toHaveAttribute('width', /^\d+$/);
+      await expect(mark).toHaveAttribute('height', /^\d+$/);
+      await expect(page.locator('.site-header .brand svg'), `${path}: inline mark`).toHaveCount(0);
+    }
+    const file = await request.get('/logo.svg');
+    expect(file.status()).toBe(200);
+    expect(file.headers()['content-type']).toContain('image/svg+xml');
+  });
+
+  const accents = { light: [0xc8, 0x33, 0x0f], dark: [0xff, 0x7a, 0x4d] };
+  for (const scheme of ['light', 'dark'] as const) {
+    test(`AC-35 the mark is filled with the accent colour of the ${scheme} scheme`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.goto('/');
+      const mark = page.locator('.site-header .brand img');
+      await expect(mark).toHaveJSProperty('complete', true);
+      const shot = PNG.sync.read(await mark.screenshot());
+      // The middle of the box's top face: a third of the way down, well clear of the outline.
+      const at = (Math.round(shot.height / 3) * shot.width + Math.round(shot.width / 2)) * 4;
+      const [red, green, blue] = shot.data.subarray(at, at + 3);
+      const off = Math.max(...accents[scheme].map((value, index) => Math.abs(value - [red, green, blue][index])));
+      expect(off, `pixel rgb(${red}, ${green}, ${blue})`).toBeLessThanOrEqual(2);
+    });
+  }
 });
 
 test.describe('who runs the site', () => {

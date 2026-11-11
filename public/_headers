@@ -14,3 +14,9 @@
 
 /samples/*
   Cache-Control: public, max-age=86400
+
+/logo.svg
+  Cache-Control: public, max-age=86400
+
+/logo-dark.svg
+  Cache-Control: public, max-age=86400
