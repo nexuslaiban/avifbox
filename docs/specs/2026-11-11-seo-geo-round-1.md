@@ -97,8 +97,9 @@ All `E` (Playwright against the built site).
   manager's post that links it.
 - **Who runs the site, and how to reach them, is the owner's call.** Answers given at approval:
   `/about` describes AVIFBox as an independent project and names nobody; the contact address is
-  `hello@avifbox.com`. `avifbox.com` had no MX record on 2026-11-11, so the address receives
-  nothing until the owner turns on Cloudflare Email Routing.
+  `hello@avifbox.com`. `avifbox.com` had no MX record when the page was written, so the address
+  received nothing. The owner turned on Cloudflare Email Routing later on 2026-11-11: the MX and SPF
+  records were checked that day, delivery to a mailbox was not.
 
 ## Approval
 
