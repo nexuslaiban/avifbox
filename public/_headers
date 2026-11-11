@@ -1,4 +1,4 @@
-# Response headers for static hosts that read this file (Cloudflare Pages, Netlify).
+# Response headers for static hosts that read this file (Cloudflare Workers and Pages, Netlify).
 # Pages carry their own Content-Security-Policy in a <meta> tag, generated at build time.
 
 /*

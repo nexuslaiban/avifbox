@@ -1,0 +1,13 @@
+// Cloudflare Workers, static assets only: no Worker script, `dist/` is served as is.
+// `public/_headers` is honoured; `/avif-to-png` resolves to `avif-to-png.html` by default.
+{
+  "name": "avifbox",
+  "compatibility_date": "2026-11-11",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page",
+  },
+  // A custom domain makes Cloudflare create the DNS record and the certificate, and turns the
+  // `*.workers.dev` copy of the site off.
+  "routes": [{ "pattern": "avifbox.com", "custom_domain": true }],
+}
