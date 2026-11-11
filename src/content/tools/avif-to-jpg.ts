@@ -82,7 +82,7 @@ export const avifToJpg: ToolPage = {
       id: 'open',
       title: 'When the AVIF simply will not open',
       body: [
-        'Converting is the quickest way around software that cannot read AVIF. If you would rather open the file as it is, the guide to <a href="/how-to-open-avif-file">opening AVIF files</a> covers Windows, Mac, iPhone, Android and Photoshop, and includes a viewer.',
+        'Converting is the quickest way around software that cannot read AVIF. If you would rather open the file as it is, the <a href="/avif-viewer">AVIF viewer</a> shows it in your browser, and the guide to <a href="/how-to-open-avif-file">opening AVIF files</a> covers Windows, Mac, iPhone, Android and Photoshop.',
       ],
     },
     LIMITS_AND_PRIVACY,

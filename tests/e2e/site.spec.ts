@@ -236,6 +236,24 @@ test.describe('site structure', () => {
     }
   });
 
+  test('AC-44 the pages about AVIF link to the viewer from their body: the home page in a card, the others in a sentence', async ({
+    page,
+  }) => {
+    for (const path of ['/', '/avif-to-png', '/avif-to-jpg', '/avif-to-apng', ...GUIDES]) {
+      await page.goto(path);
+      // One entry per link to the viewer outside the tool: whether it sits in a paragraph.
+      const inParagraph = await page.evaluate(
+        (viewer) =>
+          [...document.querySelectorAll(`main a[href="${viewer}"]`)]
+            .filter((link) => !link.closest('[data-tool]'))
+            .map((link) => link.closest('p') !== null),
+        VIEWER,
+      );
+      expect(inParagraph.length, `${path}: links to the viewer in the body`).toBeGreaterThan(0);
+      if (path !== '/') expect(inParagraph, `${path}: a link to the viewer in a paragraph`).toContain(true);
+    }
+  });
+
   test('AC-24 pages link to each other as the sitemap plan says, and no internal link is broken', async ({
     page,
     request,

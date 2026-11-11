@@ -95,6 +95,12 @@ export const RELATED = {
     note: 'Windows, Mac, iPhone, Android, Photoshop — and a viewer.',
     kind: 'Guide',
   },
+  viewer: {
+    href: NAV.viewer.href,
+    label: 'AVIF viewer',
+    note: 'See the picture, its details and every frame of an animation.',
+    kind: 'Viewer',
+  },
 } as const satisfies Record<string, Related>;
 
 export const PRIVACY_FAQ: Faq = {

@@ -32,7 +32,7 @@ export interface Related {
   href: string;
   label: string;
   note: string;
-  kind: 'Converter' | 'Guide';
+  kind: 'Converter' | 'Guide' | 'Viewer';
 }
 
 export interface ToolPage {

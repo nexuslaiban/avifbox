@@ -36,7 +36,9 @@ Out of scope: `→ AVIF` pages, GIF and WebP export, localisation, `llms.txt`, a
 - Every response gains `Strict-Transport-Security: max-age=31536000`. A browser that has visited the
   site refuses plain HTTP to `avifbox.com` for a year. HTTP already redirects to HTTPS, so nothing
   visible changes. Undoing it takes a deploy with `max-age=0` and visitors coming back.
-- Six pages gain a card for the viewer, marked "Viewer"; the two guides also gain a sentence.
+- The home page gains a card for the viewer, marked "Viewer". The three AVIF tool pages and the two
+  guides gain a sentence that links to it. `/avif-to-png` stood at 1,298 words, so two turns of
+  phrase that carried no fact are cut there to keep it within AC-23's 1,300. No link is removed.
 
 ## Acceptance criteria
 
@@ -59,7 +61,8 @@ Out of scope: `→ AVIF` pages, GIF and WebP export, localisation, `llms.txt`, a
   `https://avifbox.com/` (observed with curl, recorded below).
 - **AC-44** (E) Given `/`, `/avif-to-png`, `/avif-to-jpg`, `/avif-to-apng`, `/what-is-avif` and
   `/how-to-open-avif-file`, then the body of the page — outside the header, the footer and the tool —
-  links to `/avif-viewer`. On the two guides one such link is inside a paragraph. AC-23 still holds.
+  links to `/avif-viewer`. On every one of them but the home page, such a link is inside a paragraph.
+  AC-23 still holds.
 
 ## Decisions worth recording
 
@@ -82,6 +85,10 @@ Out of scope: `→ AVIF` pages, GIF and WebP export, localisation, `llms.txt`, a
   taken back in any useful time.
 - **`favicon.ico` is not declared in the page.** It is there for clients that ask for the well-known
   path. Declaring it would make some browsers prefer it to the SVG.
+- **A sentence, not a fifth card** (amended on 2026-11-12, while building part 5; the approved text
+  gave all six pages a card). Five cards wrap as four and one on a desktop. The pages that already
+  had four link to the viewer from a sentence where the question comes up — is this file HDR, is it
+  animated, can I just look at it — and only the home page, which had two cards, gets a third.
 - **Found, not fixed: PNG files from WebKit are larger.** Same pixels, 5% (`transparent.avif`) to 13%
   (`photo.avif`) more bytes than from Chromium, because the browser's own deflate is used. Bundling
   one would make the output the same everywhere; it costs script weight and is not measured yet.

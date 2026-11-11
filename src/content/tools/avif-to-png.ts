@@ -62,14 +62,14 @@ export const avifToPng: ToolPage = {
       body: [
         'AVIF is usually lossy; PNG stores every pixel, so a photo typically grows 5 to 20 times. That is the format, not a fault in the conversion. Two presets control it:',
         '<ul><li><strong>Truecolor</strong> — a lossless copy in the leanest lossless layout: an exact palette for images with 256 colours or fewer, no alpha channel when nothing is transparent.</li><li><strong>Optimized</strong> — at most 256 colours, with dithering. Roughly halves a photo; flat graphics usually look identical.</li></ul>',
-        'The sizes beside each file are measured, not estimated — switch presets and watch them change.',
+        'The sizes beside each file are measured, not estimated.',
       ],
     },
     {
       id: 'animated',
       title: 'Animated AVIF: pick frames, or keep it moving',
       body: [
-        'Many converters keep the first frame of an animated AVIF and quietly drop the rest. Here every frame becomes its own numbered PNG, with thumbnails so you can untick the ones you do not want.',
+        'Many converters keep only the first frame of an animated AVIF. Here every frame becomes its own numbered PNG, with thumbnails so you can untick the ones you do not want.',
         `Prefer one file? <strong>Animated PNG</strong> gives a single .png (<a href="/avif-to-apng">APNG</a>) that keeps the motion and timing and plays in every current browser. ${cite('imageDecoder', 'Frame access')} works in Chrome, Edge and Firefox; in Safari only the first frame is converted.`,
       ],
     },
@@ -77,7 +77,7 @@ export const avifToPng: ToolPage = {
       id: 'hdr',
       title: 'HDR and 10-bit AVIF, handled honestly',
       body: [
-        'PNGs from this tool are 8-bit SDR, the kind every program reads. An HDR AVIF (PQ or HLG) has to be squeezed to fit, and the converter does that deliberately:',
+        'PNGs from this tool are 8-bit SDR, the kind every program reads. An HDR AVIF (PQ or HLG) — the <a href="/avif-viewer">AVIF viewer</a> shows whether yours is one — has to be squeezed to fit, and the converter does that deliberately:',
         '<ul><li><strong>Keep brightness</strong> — highlights stay as bright as SDR allows and fade toward white, like a camera JPG.</li><li><strong>Keep colour</strong> — highlights keep their hue and come out darker.</li></ul>',
         `<strong>Display P3</strong> keeps wide-gamut colour by embedding the profile. Lost either way: brightness above SDR white, and 10- and 12-bit precision, which is rounded to 8 bits. If you need those, decode to 16-bit TIFF or PNG with a desktop tool such as ${cite('libavif', '<code>avifdec</code>')}.`,
       ],

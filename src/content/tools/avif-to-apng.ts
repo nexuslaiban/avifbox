@@ -82,7 +82,7 @@ export const avifToApng: ToolPage = {
       id: 'stills',
       title: 'Still images, and Safari',
       body: [
-        'A still AVIF added to this page becomes an ordinary PNG, since there is nothing to animate.',
+        'A still AVIF added to this page becomes an ordinary PNG, since there is nothing to animate. The <a href="/avif-viewer">AVIF viewer</a> shows whether a file is animated, and how many frames it has.',
         `Safari does not let a web page step through the frames of an animation — it has no ${cite('imageDecoder', 'ImageDecoder')} — so there only the first frame is converted and the result is a still PNG. Use Chrome, Edge or Firefox to convert animations.`,
       ],
     },
