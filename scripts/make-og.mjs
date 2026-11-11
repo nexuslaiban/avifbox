@@ -1,10 +1,12 @@
-// Renders public/og.png (1200x630), the image shown when a page is shared, and public/logo.png
-// (512x512), the logo named in the Organization data. Run when the brand changes.
-import { readFileSync } from 'node:fs';
+// Renders the brand's raster files into public/: og.png (1200x630), the image shown when a page is
+// shared, and the mark of favicon.svg as logo.png (512 px, the logo named in the Organization data),
+// apple-touch-icon.png (180 px) and favicon.ico (16, 32 and 48 px). Run when the brand changes.
+import { readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
+import { PNG } from 'pngjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const require = createRequire(import.meta.url);
@@ -44,11 +46,47 @@ await page.setContent(html);
 await page.evaluate(() => document.fonts.ready);
 await page.screenshot({ path: join(root, 'public', 'og.png') });
 
-// The logo is the favicon, at a size search engines accept (112 px is their minimum).
 const favicon = readFileSync(join(root, 'public', 'favicon.svg'), 'utf8');
-await page.setViewportSize({ width: 512, height: 512 });
-await page.setContent(`<style>html,body{margin:0}svg{display:block;width:512px;height:512px}</style>${favicon}`);
-await page.screenshot({ path: join(root, 'public', 'logo.png') });
+
+/** The mark as a PNG of `size` pixels. */
+async function mark(size) {
+  await page.setViewportSize({ width: size, height: size });
+  await page.setContent(
+    `<style>html,body{margin:0}svg{display:block;width:${size}px;height:${size}px}</style>${favicon}`,
+  );
+  return page.screenshot();
+}
+
+/** An ICO file of square PNG images: a directory of 16-byte entries, then the images as they are. */
+function ico(images) {
+  const directory = Buffer.alloc(6 + 16 * images.length);
+  directory.writeUInt16LE(1, 2); // type: icon
+  directory.writeUInt16LE(images.length, 4);
+  let offset = directory.length;
+  images.forEach(({ size, png }, index) => {
+    const entry = 6 + 16 * index;
+    directory.writeUInt8(size, entry); // width
+    directory.writeUInt8(size, entry + 1); // height
+    directory.writeUInt16LE(1, entry + 4); // colour planes
+    directory.writeUInt16LE(32, entry + 6); // bits per pixel
+    directory.writeUInt32LE(png.length, entry + 8);
+    directory.writeUInt32LE(offset, entry + 12);
+    offset += png.length;
+  });
+  return Buffer.concat([directory, ...images.map((image) => image.png)]);
+}
+
+const save = (name, bytes) => writeFileSync(join(root, 'public', name), bytes);
+
+// Search engines want a logo of at least 112 px.
+save('logo.png', await mark(512));
+// What iOS puts on the home screen. Opaque, because it paints a transparent icon on black.
+save('apple-touch-icon.png', await mark(180));
+// For clients that do not take the SVG favicon and ask for the well-known path. ICO takes PNG in RGBA
+// only, and a screenshot of an opaque page is RGB, so each one is written again.
+const small = [];
+for (const size of [16, 32, 48]) small.push({ size, png: PNG.sync.write(PNG.sync.read(await mark(size))) });
+save('favicon.ico', ico(small));
 
 await browser.close();
-console.log('wrote public/og.png and public/logo.png');
+console.log('wrote og.png, logo.png, apple-touch-icon.png and favicon.ico to public/');

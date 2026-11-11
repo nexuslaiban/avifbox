@@ -6,7 +6,16 @@ import { fileURLToPath } from 'node:url';
 import { SOURCES } from '../../src/content/sources';
 import { PNG } from 'pngjs';
 import { formatBytes } from '../../src/ui/format';
-import { addFiles, downloadNamed, expectSameBytes, expectSamePixels, readPng, settled } from './helpers';
+import {
+  addFiles,
+  downloadNamed,
+  expectSameBytes,
+  expectSamePixels,
+  pngColourType,
+  readPng,
+  settled,
+  type Raster,
+} from './helpers';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const ORIGIN = 'https://avifbox.com';
@@ -473,6 +482,61 @@ test.describe('logo', () => {
       expect(off, `pixel rgb(${red}, ${green}, ${blue})`).toBeLessThanOrEqual(2);
     });
   }
+});
+
+/** The images inside an ICO file. Each has to be a 32-bit PNG of the size its entry declares. */
+function icoImages(ico: Buffer): Raster[] {
+  expect([ico.readUInt16LE(0), ico.readUInt16LE(2)], 'ICO header: reserved, type').toEqual([0, 1]);
+  return Array.from({ length: ico.readUInt16LE(4) }, (_, index) => {
+    const entry = 6 + index * 16;
+    const [size, offset] = [ico.readUInt32LE(entry + 8), ico.readUInt32LE(entry + 12)];
+    const png = ico.subarray(offset, offset + size);
+    // The format takes PNG images in RGBA only, whatever a lenient reader accepts.
+    expect(pngColourType(png), `ICO entry ${index}: PNG colour type`).toBe(6);
+    const image = readPng(png);
+    expect([ico[entry], ico[entry + 1]], `ICO entry ${index}: declared size`).toEqual([image.width, image.height]);
+    return image;
+  });
+}
+
+test.describe('icons', () => {
+  // The background of the mark in favicon.svg.
+  const BACKGROUND = [0xc8, 0x33, 0x0f, 255];
+
+  test('AC-42 /favicon.ico holds 16, 32 and 48 px images, and the touch icon is 180 px and opaque', async ({
+    request,
+  }) => {
+    const ico = await request.get('/favicon.ico');
+    expect(ico.status(), '/favicon.ico').toBe(200);
+    const images = icoImages(await ico.body());
+    expect(images.map((image) => [image.width, image.height])).toEqual([
+      [16, 16],
+      [32, 32],
+      [48, 48],
+    ]);
+    for (const image of images) expect(image.at(0, 0), `${image.width} px: corner`).toEqual(BACKGROUND);
+
+    const touch = await request.get('/apple-touch-icon.png');
+    expect(touch.status(), '/apple-touch-icon.png').toBe(200);
+    expect(touch.headers()['content-type']).toBe('image/png');
+    const icon = readPng(await touch.body());
+    expect([icon.width, icon.height]).toEqual([180, 180]);
+    expect(icon.at(0, 0), 'corner').toEqual(BACKGROUND);
+    // iOS paints a transparent icon on black.
+    const transparent = icon.data.filter((_, index) => index % 4 === 3 && icon.data[index] !== 255).length;
+    expect(transparent, 'pixels that are not opaque').toBe(0);
+  });
+
+  test('AC-42 every page names the touch icon and still declares the SVG favicon alone', async ({ page }) => {
+    for (const path of PAGES) {
+      await page.goto(path);
+      await expect(page.locator('link[rel="apple-touch-icon"]'), path).toHaveAttribute('href', '/apple-touch-icon.png');
+      expect(
+        await page.locator('link[rel~="icon"]').evaluateAll((links) => links.map((link) => link.getAttribute('href'))),
+        `${path}: declared icons`,
+      ).toEqual(['/favicon.svg']);
+    }
+  });
 });
 
 test.describe('who runs the site', () => {
