@@ -288,12 +288,18 @@ img {
   position: relative;
 }
 
-.site-nav summary {
+/* the top row: two menu buttons and, between them, a plain link */
+.site-nav summary,
+.site-nav > ul > li > a {
   display: flex;
   align-items: center;
   gap: 0.45rem;
   padding-block: 0.35rem;
   border-bottom: 2px solid transparent;
+  text-decoration: none;
+}
+
+.site-nav summary {
   cursor: pointer;
   list-style: none;
   user-select: none;
@@ -320,8 +326,8 @@ img {
 .site-nav summary:hover,
 .site-nav details[open] summary,
 .site-nav details[data-current] summary,
-.menu a:hover,
-.menu a[aria-current='page'] {
+.site-nav a:hover,
+.site-nav a[aria-current='page'] {
   border-bottom-color: var(--accent);
 }
 

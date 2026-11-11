@@ -1,0 +1,236 @@
+---
+import Base from '../layouts/Base.astro';
+import Faq from '../components/Faq.astro';
+import Cards from '../components/Cards.astro';
+import Viewer from '../ui/Viewer';
+import { MAX_FILE_BYTES } from '../engine/limits';
+import { NAV, PRIVACY_FAQ, RELATED, SITE, STAMPS } from '../content/site';
+import { appSchema, faqSchema } from '../content/schema';
+import { cite } from '../content/sources';
+import type { Faq as FaqEntry, Section, Step } from '../content/types';
+
+const path = NAV.viewer.href;
+const title = 'AVIF Viewer — Open and View AVIF Files Online | AVIFBox';
+const description =
+  'View an AVIF file in your browser: the picture, its dimensions, bit depth, HDR and colour details, and every frame of an animation. Save it as PNG or JPG.';
+const limit = `${MAX_FILE_BYTES / (1024 * 1024)} MB`;
+
+const steps: Step[] = [
+  {
+    title: 'Open the file',
+    body: `Drop it on the box, or press <strong>Choose a file</strong>. One file at a time, up to ${limit}.`,
+  },
+  {
+    title: 'Read what it is',
+    body: 'The picture appears with its dimensions, bit depth and colour information — and, for an animation, the number of frames.',
+  },
+  {
+    title: 'Save a copy if you need one',
+    body: '<strong>Save as PNG</strong> or <strong>Save as JPG</strong> downloads what is on screen in a format everything opens.',
+  },
+];
+
+const sections: Section[] = [
+  {
+    id: 'facts',
+    title: 'What the viewer tells you',
+    body: [
+      'Next to the picture the viewer lists what the file says about itself:',
+      `<ul>
+        <li><strong>Dimensions</strong> in pixels, and the size of the file.</li>
+        <li><strong>Bit depth</strong>: 8, 10 or 12 bits per channel.</li>
+        <li><strong>Colour</strong>: whether the image is HDR, with PQ or HLG, and which primaries it uses, such as BT.709, Display P3 or BT.2020.</li>
+        <li><strong>Animated</strong>: whether the file is a sequence, and how many frames it holds.</li>
+      </ul>`,
+    ],
+  },
+  {
+    id: 'frames',
+    title: 'Animated AVIF, frame by frame',
+    body: [
+      'An animated AVIF plays as it would on a web page. Under it a strip shows every frame as a thumbnail: choose one to hold it still, and press <strong>Play</strong> to let the animation run again. While a frame is chosen, the save buttons download that frame, numbered as in the strip.',
+      `Stepping through frames relies on a browser feature called ${cite('imageDecoder', 'ImageDecoder')}. Chrome, Edge and Firefox have it. Safari does not, so there the animation still plays, but only its first frame can be saved.`,
+    ],
+  },
+  {
+    id: 'save',
+    title: 'Saving as PNG or JPG',
+    body: [
+      '<strong>Save as PNG</strong> gives a lossless copy that keeps transparency. <strong>Save as JPG</strong> gives a small file at quality 90, with transparent areas filled white, because JPG has no transparency. Either way the copy has 8 bits per channel and standard dynamic range: an HDR image is tone-mapped on the way.',
+      'For batches of files, every frame at once, an animated PNG, or a different quality or background, use the converters: <a href="/avif-to-png">AVIF to PNG</a>, <a href="/avif-to-jpg">AVIF to JPG</a> and <a href="/avif-to-apng">AVIF to APNG</a>.',
+    ],
+  },
+  {
+    id: 'trouble',
+    title: 'If the picture does not appear',
+    body: [
+      `Current browsers draw AVIF themselves: ${cite('caniuseAvif', 'Chrome 85, Firefox 93, Edge 121 and Safari 16')} or later. When a browser cannot, the viewer decodes the file and shows that copy instead. If it says the file could not be decoded, the file is damaged or is not an image at all.`,
+      'To open AVIF outside the browser — in Windows Photos, Preview or Photoshop, or on a phone — see <a href="/how-to-open-avif-file">how to open an AVIF file</a>.',
+    ],
+  },
+  {
+    id: 'privacy',
+    title: 'Private, with one limit',
+    body: [
+      `Your own browser reads the file, and it is never sent anywhere. You need not take that on trust: this page’s security policy only lets it talk to avifbox.com, and your browser’s network panel will show that opening a file sends nothing. The one limit is size, ${limit} per file. There is no account, no quota and nothing to install.`,
+    ],
+  },
+];
+
+const faq: FaqEntry[] = [
+  {
+    question: 'How do I view an AVIF file online?',
+    answer:
+      'Drop it on the box at the top of this page or press Choose a file. The picture and its details appear at once, with nothing to install.',
+  },
+  PRIVACY_FAQ,
+  {
+    question: 'Can I see the frames of an animated AVIF?',
+    answer:
+      'Yes. In Chrome, Edge and Firefox every frame appears as a thumbnail; choose one to show it and to save it as PNG or JPG. Safari plays the animation but only gives a page its first frame.',
+  },
+  {
+    question: 'How can I tell whether an AVIF is HDR?',
+    answer:
+      'Open it here and read the Colour line. For an HDR file it says HDR, with PQ or HLG, and names the colour primaries. The bit depth is listed separately.',
+  },
+  {
+    question: 'Can I convert the AVIF I am looking at?',
+    answer:
+      'Yes: Save as PNG or Save as JPG downloads what is on screen. For several files at once, or more settings, use <a href="/avif-to-png">AVIF to PNG</a> or <a href="/avif-to-jpg">AVIF to JPG</a>.',
+  },
+  {
+    question: 'Does the viewer open other formats?',
+    answer: 'It is made for AVIF. A WebP, JPG or PNG dropped on it is shown the same way.',
+  },
+];
+
+const facts: [string, string][] = [
+  ['Price', 'Free — no account, no watermark, no quota'],
+  ['Works in', 'Chrome, Edge, Firefox and Safari, on desktop and mobile'],
+  ['Opens', 'AVIF — still, animated, HDR, with transparency'],
+  ['Shows', 'Dimensions, file size, bit depth, HDR and colour primaries, frames'],
+  ['Saves as', 'PNG or JPG: the picture, or one chosen frame'],
+  ['File size', `Up to ${limit}`],
+  ['Processing', 'On your device; nothing is uploaded'],
+];
+
+const name = `${SITE.name} AVIF Viewer`;
+const jsonLd = [
+  appSchema({ name, path, description, features: facts.map(([label, value]) => `${label}: ${value}`) }),
+  faqSchema(faq),
+];
+
+const number = (index: number) => `№ ${String(index).padStart(2, '0')}`;
+// Sections are numbered in reading order: how-to, the prose sections, then the rest.
+const proseStart = 2;
+const faqNo = proseStart + sections.length;
+---
+
+<Base title={title} description={description} path={path} jsonLd={jsonLd}>
+  <section class="band">
+    <div class="wrap reveal">
+      <p class="label">
+        <span>
+          <small>Tool</small>
+          <strong>Viewer</strong>
+        </span>
+        <span>
+          <small>Subject</small>
+          <strong>.AVIF</strong>
+        </span>
+        <span class="label-extra">
+          <small>Handling</small>
+          <strong>On your device</strong>
+        </span>
+        <span class="barcode" aria-hidden="true"></span>
+      </p>
+      <h1>
+        AVIF <em>Viewer</em>
+      </h1>
+      <p class="lede">
+        Drop an AVIF file to see it straight away, with its size, bit depth, HDR and colour details and every frame of
+        an animation. It opens in your browser and is never uploaded.
+      </p>
+      <div data-tool class="tool-gap">
+        <Viewer client:load />
+        <noscript>
+          <p class="note">
+            The viewer needs JavaScript, because your browser does the work. Nothing is sent to a server.
+          </p>
+        </noscript>
+      </div>
+
+      <ul class="stamps" aria-label="Why AVIFBox">
+        {STAMPS.map((stamp) => (
+          <li>
+            {stamp.title}
+            <small>{stamp.note}</small>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <article class="doc wrap">
+    <section id="how-to">
+      <div class="sec-head">
+        <span class="sec-no">{number(1)}</span>
+        <h2>How to view an AVIF file</h2>
+      </div>
+      <ol class="steps">
+        {steps.map((step) => (
+          <li>
+            <h3>{step.title}</h3>
+            <p set:html={step.body} />
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="split">
+      {sections.map((section, index) => (
+        <section id={section.id}>
+          <div class="sec-head">
+            <span class="sec-no">{number(proseStart + index)}</span>
+            <h2>{section.title}</h2>
+          </div>
+          <div class="prose">
+            {section.body.map((block) =>
+              block.startsWith('<ul') ? <Fragment set:html={block} /> : <p set:html={block} />,
+            )}
+          </div>
+        </section>
+      ))}
+    </section>
+
+    <Faq number={number(faqNo)} entries={faq} />
+
+    <section id="details">
+      <div class="sec-head">
+        <span class="sec-no">{number(faqNo + 1)}</span>
+        <h2>Packing list</h2>
+      </div>
+      <div class="slip" tabindex="0" role="region" aria-label="Viewer details">
+        <table>
+          <caption>{`${name} — details`}</caption>
+          <tbody>
+            {facts.map(([label, value]) => (
+              <tr>
+                <th scope="row">{label}</th>
+                <td>{value}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <Cards
+      id="related"
+      number={number(faqNo + 2)}
+      title="More from the box"
+      links={[RELATED.avifToPng, RELATED.avifToJpg, RELATED.openAvif, RELATED.whatIsAvif]}
+    />
+  </article>
+</Base>

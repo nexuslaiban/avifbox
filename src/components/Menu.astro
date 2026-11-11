@@ -1,0 +1,39 @@
+---
+interface Link {
+  href: string;
+  label: string;
+}
+
+interface Props {
+  label: string;
+  /** One list of links per group; a group with a title is listed under it. */
+  groups: readonly { title?: string; links: readonly Link[] }[];
+  /** Site-relative path of the page being built: its link and this menu are marked as current. */
+  path: string;
+}
+
+// A header menu: a button, and under it its links. <details> opens and closes without script.
+const { label, groups, path } = Astro.props;
+const holdsPage = groups.some((group) => group.links.some((link) => link.href === path));
+const id = (title: string) => `menu-${title.toLowerCase()}`;
+---
+
+<details name="site-menu" data-current={holdsPage ? '' : undefined}>
+  <summary>{label}</summary>
+  <div class="menu">
+    {groups.map(({ title, links }) => (
+      <div>
+        {title && <p id={id(title)}>{title}</p>}
+        <ul aria-labelledby={title && id(title)}>
+          {links.map((link) => (
+            <li>
+              <a href={link.href} aria-current={link.href === path ? 'page' : undefined}>
+                {link.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </div>
+</details>

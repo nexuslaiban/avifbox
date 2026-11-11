@@ -19,9 +19,10 @@ const TOOLS = [
   '/webp-to-png',
   '/webp-to-jpg',
 ];
+const VIEWER = '/avif-viewer';
 const GUIDES = ['/what-is-avif', '/how-to-open-avif-file'];
 const INFO = ['/about', '/privacy'];
-const PAGES = ['/', ...TOOLS, ...GUIDES, ...INFO];
+const PAGES = ['/', ...TOOLS, VIEWER, ...GUIDES, ...INFO];
 const ORGANIZATION = `${ORIGIN}/#organization`;
 
 /** Words of body copy: everything in <main> except the interactive tool. */
@@ -187,6 +188,45 @@ test.describe('site structure', () => {
     expect(words, 'home page body copy').toBeLessThanOrEqual(900);
   });
 
+  test('AC-38 the viewer page carries free-application and FAQ data, 500–900 words, and links onward', async ({
+    page,
+  }) => {
+    await page.goto(VIEWER);
+    expect(await page.title()).toMatch(/^AVIF Viewer/);
+
+    const data = await jsonLd(page);
+    expectFreeApp(data, `${ORIGIN}${VIEWER}`);
+    await expectFaqData(page, data, 5);
+
+    const words = await bodyWords(page);
+    expect(words, 'viewer page body copy').toBeGreaterThanOrEqual(500);
+    expect(words, 'viewer page body copy').toBeLessThanOrEqual(900);
+
+    // In the copy itself: the viewer's own buttons and links do not count.
+    const inCopy = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLAnchorElement>('main a[href^="/"]')]
+        .filter((link) => !link.closest('[data-tool]'))
+        .map((link) => link.getAttribute('href')!.split('#')[0]),
+    );
+    for (const target of ['/avif-to-png', '/avif-to-jpg', '/how-to-open-avif-file'])
+      expect(inCopy, `the copy should link to ${target}`).toContain(target);
+  });
+
+  test('AC-38 the header and the footer of every page link to the viewer', async ({ page }) => {
+    for (const path of PAGES) {
+      await page.goto(path);
+      // In the header it is a link of its own between the two menus, so it shows without opening anything.
+      const top = page.locator(`.site-header nav a[href="${VIEWER}"]`);
+      await expect(top, `${path}: header`).toHaveCount(1);
+      await expect(top, `${path}: header`).toBeVisible();
+      await expect(top).toHaveText('AVIF viewer');
+      expect(await top.evaluate((link) => link.closest('details') === null), `${path}: outside the menus`).toBe(true);
+      await expect(
+        page.getByRole('navigation', { name: 'Guides', exact: true }).locator(`a[href="${VIEWER}"]`),
+      ).toHaveCount(1);
+    }
+  });
+
   test('AC-24 pages link to each other as the sitemap plan says, and no internal link is broken', async ({
     page,
     request,
@@ -199,6 +239,7 @@ test.describe('site structure', () => {
       '/webp-to-png': ['/avif-to-png', '/webp-to-jpg'],
       '/webp-to-jpg': ['/webp-to-png'],
       '/avif-to-apng': ['/avif-to-png'],
+      '/avif-viewer': ['/avif-to-png', '/avif-to-jpg', '/how-to-open-avif-file'],
       '/what-is-avif': ['/avif-to-png', '/avif-to-jpg'],
       '/how-to-open-avif-file': ['/avif-to-png', '/avif-to-jpg'],
       '/': TOOLS,
@@ -292,7 +333,7 @@ test.describe('header menu', () => {
       const current = await page
         .locator('.site-header a[aria-current="page"]')
         .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
-      expect(current, `${path}: current link`).toEqual(inMenu ? [path] : []);
+      expect(current, `${path}: current link`).toEqual(inMenu || path === VIEWER ? [path] : []);
       const marked = page.locator('.site-header details[data-current]');
       await expect(marked, `${path}: current menu`).toHaveCount(inMenu ? 1 : 0);
       if (inMenu) await expect(marked.locator(`a[href="${path}"]`), path).toHaveCount(1);
@@ -618,23 +659,6 @@ test.describe('layout stability', () => {
   }
 });
 
-test.describe('viewer', () => {
-  test('AC-27 an AVIF dropped on the guide page is shown with its metadata', async ({ page }) => {
-    await page.goto('/how-to-open-avif-file');
-    await addFiles(page, 'hdr-pq.avif');
-    await expect(page.getByRole('img', { name: 'Preview of hdr-pq.avif' })).toBeVisible();
-    const facts = page.locator('.vw-facts');
-    await expect(facts).toContainText('48 × 16 pixels');
-    await expect(facts).toContainText('10-bit');
-    await expect(facts).toContainText('HDR (PQ)');
-    await expect(facts.getByRole('link', { name: 'Convert to PNG' })).toHaveAttribute('href', '/avif-to-png');
-
-    await addFiles(page, 'anim.avif');
-    await expect(facts).toContainText('8-bit');
-    await expect(facts.locator('dd').last()).toHaveText('Yes');
-  });
-});
-
 test.describe('accessibility', () => {
   for (const scheme of ['light', 'dark'] as const) {
     test(`AC-28 no serious axe violations (${scheme})`, async ({ page }) => {
@@ -670,6 +694,29 @@ test.describe('accessibility', () => {
       ),
     ).toEqual([]);
   });
+
+  for (const scheme of ['light', 'dark'] as const) {
+    test(`AC-28 the viewer with an animation and a chosen frame on screen has no serious axe violations (${scheme})`, async ({
+      page,
+    }) => {
+      await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
+      await page.goto(VIEWER);
+      await addFiles(page, 'anim.avif');
+      const frames = page.getByRole('list', { name: 'Frames of anim.avif', exact: true });
+      await expect(frames.getByRole('button')).toHaveCount(5);
+      await frames.getByRole('button', { name: 'Frame 3', exact: true }).click();
+      await expect(page.getByRole('button', { name: 'Save as PNG', exact: true })).toBeEnabled();
+      const results = await new AxeBuilder({ page }).include('[data-tool]').analyze();
+      const serious = results.violations.filter(
+        (violation) => violation.impact === 'serious' || violation.impact === 'critical',
+      );
+      expect(
+        serious.map(
+          (violation) => `${violation.id} — ${violation.nodes.map((node) => node.target.join(' ')).join(', ')}`,
+        ),
+      ).toEqual([]);
+    });
+  }
 
   test('AC-28 the file picker can be opened from the keyboard', async ({ page }) => {
     await page.goto('/avif-to-png');

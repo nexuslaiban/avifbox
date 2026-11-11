@@ -15,8 +15,8 @@ export default defineConfig({
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    // Conversion only: page structure and accessibility do not depend on the engine.
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] }, testMatch: 'convert.spec.ts' },
+    // The converter and the viewer only: page structure and accessibility do not depend on the engine.
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] }, testMatch: ['convert.spec.ts', 'viewer.spec.ts'] },
   ],
   webServer: {
     // --ignore-lock keeps the server in the foreground even when Astro detects a coding agent and

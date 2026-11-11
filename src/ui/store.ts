@@ -1,7 +1,8 @@
+import { useEffect, useState } from 'preact/hooks';
 import { MAX_FILES, MAX_FILE_BYTES, admit } from '../engine/limits';
 import { outputName, stem, uniqueStem } from '../engine/names';
 import type { JobRunner } from '../engine/pool';
-import type { ConvertEvent, ConvertOptions, ImageInfo } from '../engine/types';
+import type { ConvertEvent, ConvertOptions, ImageInfo, Target } from '../engine/types';
 
 // The converter's state: the list of files, what each one turned into, and the current settings.
 // Results are always for the current settings — changing one re-converts the whole list.
@@ -40,6 +41,20 @@ export interface State {
   items: Item[];
   options: ConvertOptions;
   notice: string | null;
+}
+
+/** The settings a page starts with. */
+export function defaultOptions(target: Target, animation: ConvertOptions['animation'] = 'frames'): ConvertOptions {
+  return {
+    target,
+    pngMode: 'truecolor',
+    quality: 90,
+    background: null,
+    animation,
+    tone: 'brightness',
+    gamut: 'srgb',
+    keepJpeg: true,
+  };
 }
 
 const megabytes = MAX_FILE_BYTES / (1024 * 1024);
@@ -153,6 +168,13 @@ export class ConverterStore {
     this.state = { ...this.state, ...patch };
     for (const listener of this.listeners) listener();
   }
+}
+
+/** The store's state, re-rendering the component that reads it on every change. */
+export function useStore(store: ConverterStore): State {
+  const [state, setState] = useState(store.getState);
+  useEffect(() => store.subscribe(() => setState(store.getState())), [store]);
+  return state;
 }
 
 function applyEvent(item: Item, event: ConvertEvent, options: ConvertOptions): Partial<Item> {

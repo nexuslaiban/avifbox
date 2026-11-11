@@ -36,3 +36,7 @@ visitor's browser; there is no backend. Spec: `docs/specs/2026-11-11-avifbox-fir
     build does not start on this machine (missing `libevent-2.1.so.7`), so Safari is untested.
   - Firefox returns an unusable frame when the same `ImageDecoder` frame index is decoded twice in a
     worker — decode each frame once (`src/engine/decode.ts`).
+  - Chrome fires `load`, not `error`, for a truncated AVIF in an `<img>` and draws nothing. Whether a
+    file decoded is the engine's call, not the image element's (`src/ui/Viewer.tsx`).
+  - `.band` hides horizontal overflow, so `scrollWidth - clientWidth` is 0 even when the tool sticks
+    out of a phone screen. Measure bounding boxes (`tests/e2e/viewer.spec.ts`).

@@ -21,6 +21,7 @@ export const NAV = {
     { href: '/webp-to-png', label: 'WebP to PNG', group: 'WebP' },
     { href: '/webp-to-jpg', label: 'WebP to JPG', group: 'WebP' },
   ],
+  viewer: { href: '/avif-viewer', label: 'AVIF viewer' },
   guides: [
     { href: '/what-is-avif', label: 'What is AVIF?' },
     { href: '/how-to-open-avif-file', label: 'Open an AVIF file' },

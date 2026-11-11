@@ -6,7 +6,8 @@ import { uniqueNames } from '../engine/names';
 import { Pool } from '../engine/pool';
 import type { Capabilities, ConvertOptions, Target } from '../engine/types';
 import { formatBytes, sizeChange } from './format';
-import { ConverterStore, selectedOutputs, totals, type Item, type State } from './store';
+import { saveAs } from './save';
+import { ConverterStore, defaultOptions, selectedOutputs, totals, useStore, type Item, type State } from './store';
 import './converter.css';
 
 export interface Sample {
@@ -33,38 +34,8 @@ const WIDE_PRIMARIES = new Set([9, 11, 12]); // BT.2020, DCI-P3, Display P3
 const MAX_MB = MAX_FILE_BYTES / (1024 * 1024);
 const ZIP_NAME = 'avifbox-images.zip';
 
-function initialOptions(target: Target, animation: ConvertOptions['animation'] = 'frames'): ConvertOptions {
-  return {
-    target,
-    pngMode: 'truecolor',
-    quality: 90,
-    background: null,
-    animation,
-    tone: 'brightness',
-    gamut: 'srgb',
-    keepJpeg: true,
-  };
-}
-
-function useStore(store: ConverterStore): State {
-  const [state, setState] = useState(store.getState);
-  useEffect(() => store.subscribe(() => setState(store.getState())), [store]);
-  return state;
-}
-
-function saveAs(blob: Blob, name: string): void {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = name;
-  document.body.append(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
-}
-
 export default function Converter(props: ConverterProps) {
-  const store = useMemo(() => new ConverterStore(new Pool(), initialOptions(props.target, props.animation)), []);
+  const store = useMemo(() => new ConverterStore(new Pool(), defaultOptions(props.target, props.animation)), []);
   const state = useStore(store);
   const { items, notice } = state;
   const [capabilities, setCapabilities] = useState<Capabilities | null>(null);

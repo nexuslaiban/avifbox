@@ -13,7 +13,8 @@ plain static bundle with no backend.
 | `/avif-to-apng`                           | Animated AVIF to one animated PNG           |
 | `/jfif-to-jpg`, `/jfif-to-png`            | JFIF to JPG is a lossless rename by default |
 | `/webp-to-png`, `/webp-to-jpg`            | WebP, including animated                    |
-| `/what-is-avif`, `/how-to-open-avif-file` | Guides; the second embeds a viewer          |
+| `/avif-viewer`                            | The picture, its facts, its frames; save it |
+| `/what-is-avif`, `/how-to-open-avif-file` | Guides; the second embeds the viewer        |
 | `/about`, `/privacy`                      | What the site is, and what it can see       |
 
 - Batches of 50 files, 50 MB each, downloadable as one ZIP
@@ -41,7 +42,7 @@ src/ui/        Preact converter and viewer, plus the state store
 src/content/   page copy and site constants
 src/pages/     Astro routes
 tests/unit/    engine and store tests (Node)
-tests/e2e/     conversion, site structure and accessibility tests (real browsers)
+tests/e2e/     conversion, viewer, site structure and accessibility tests (real browsers)
 scripts/       fixture, sample, share-image and logo generators
 docs/specs/    the specification the tests are written against
 ```

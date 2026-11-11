@@ -95,8 +95,17 @@ All `E` (Playwright against the built site).
   strip and the PNG download. The cost is decoding and encoding every frame of an animation, under
   the same 50 MB limit as the converters. "Save as JPG" runs a second job and, for an animation,
   stops it once the chosen frame has arrived.
+- **A failed decode replaces the picture.** The first build kept the browser's own picture on the
+  stage whenever `<img>` raised no error. Chrome raises none for a truncated AVIF — the image
+  "loads" at its full size and draws nothing — so the stage stayed blank. The converter's result
+  decides: if it could not decode the file, the stage says why and nothing is offered (found by the
+  AC-39 test, 2026-11-11).
+- **The viewer's columns are `minmax(0, 1fr)`.** A strip of 24 frames widened the whole viewer past
+  a phone screen; the page hides what sticks out, so a scroll-width check does not see it. The test
+  measures the parts instead.
 - **Not testable here:** Safari (WebKit does not start on this machine). The "first frame only" note
-  is tested by hiding `ImageDecoder` from the page, which exercises the note, not Safari's decoder.
+  is tested by taking `ImageDecoder` away from the converter's worker, which exercises the note and
+  the single-frame result, not Safari's decoder.
 - **Search volumes** in the page plan are the owner's research (Keyword Planner, 2026-06) and were
   not re-measured.
 
