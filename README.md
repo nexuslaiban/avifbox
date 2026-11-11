@@ -10,8 +10,9 @@ plain static bundle with no backend.
 | ----------------------------------------- | ------------------------------------------- |
 | `/`                                       | Hub: any supported image to PNG or JPG      |
 | `/avif-to-png`, `/avif-to-jpg`            | AVIF, including animated, 10/12-bit and HDR |
+| `/avif-to-apng`                           | Animated AVIF to one animated PNG           |
 | `/jfif-to-jpg`, `/jfif-to-png`            | JFIF to JPG is a lossless rename by default |
-| `/webp-to-png`                            | WebP, including animated                    |
+| `/webp-to-png`, `/webp-to-jpg`            | WebP, including animated                    |
 | `/what-is-avif`, `/how-to-open-avif-file` | Guides; the second embeds a viewer          |
 | `/about`, `/privacy`                      | What the site is, and what it can see       |
 

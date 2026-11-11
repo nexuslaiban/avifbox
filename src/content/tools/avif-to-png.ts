@@ -70,7 +70,7 @@ export const avifToPng: ToolPage = {
       title: 'Animated AVIF: pick frames, or keep it moving',
       body: [
         'Many converters keep the first frame of an animated AVIF and quietly drop the rest. Here every frame becomes its own numbered PNG, with thumbnails so you can untick the ones you do not want.',
-        `Prefer one file? <strong>Animated PNG</strong> gives a single .png (APNG) that keeps the motion and timing and plays in every current browser. ${cite('imageDecoder', 'Frame access')} works in Chrome, Edge and Firefox; in Safari only the first frame is converted.`,
+        `Prefer one file? <strong>Animated PNG</strong> gives a single .png (<a href="/avif-to-apng">APNG</a>) that keeps the motion and timing and plays in every current browser. ${cite('imageDecoder', 'Frame access')} works in Chrome, Edge and Firefox; in Safari only the first frame is converted.`,
       ],
     },
     {

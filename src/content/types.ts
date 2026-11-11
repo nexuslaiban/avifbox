@@ -1,4 +1,4 @@
-import type { Target } from '../engine/types';
+import type { ConvertOptions, Target } from '../engine/types';
 
 /** Strings marked "HTML" may contain inline markup (<a>, <strong>, <em>, <code>) and are rendered as is. */
 
@@ -44,6 +44,8 @@ export interface ToolPage {
   sourceLabel: string;
   accept: string;
   target: Target;
+  /** How an animated source is exported until the visitor chooses otherwise. Default: one file per frame. */
+  animation?: ConvertOptions['animation'];
   /** The same source converted to the other output format, shown as a tab. */
   sibling?: { label: string; href: string };
   offerKeepJpeg?: boolean;

@@ -19,18 +19,22 @@ const label = (slug: string) => NAV.converters.find((link) => link.href === `/${
 const blurbs: Record<string, string> = {
   'avif-to-png': 'Lossless PNG with transparency. Animated AVIF frame by frame, HDR tone-mapped.',
   'avif-to-jpg': 'Small, universal JPG with a quality slider and a background colour for transparency.',
+  'avif-to-apng': 'An animated AVIF as one animated PNG: every frame, its timing and its transparency.',
   'jfif-to-jpg': 'A lossless rename: the .jfif you saved becomes a .jpg, byte for byte.',
   'jfif-to-png': 'JFIF to PNG for editing and for tools that only take PNG.',
   'webp-to-png': 'WebP to PNG with transparency kept; animated WebP split into frames.',
+  'webp-to-jpg': 'WebP to JPG for the apps and upload forms that still refuse WebP.',
 };
 
 /** What survives each conversion: quality, transparency, animation. */
 const keeps: Record<string, [string, string, string]> = {
   'avif-to-png': ['Lossless', 'Kept', 'Every frame, or one animated PNG'],
   'avif-to-jpg': ['Lossy, quality 1–100', 'Filled with a colour you choose', 'One JPG per frame'],
+  'avif-to-apng': ['Lossless', 'Kept', 'One animated PNG'],
   'jfif-to-jpg': ['Identical: a rename', 'JPEG has none', 'JPEG has none'],
   'jfif-to-png': ['Lossless', 'JPEG has none', 'JPEG has none'],
   'webp-to-png': ['Lossless', 'Kept', 'Every frame, or one animated PNG'],
+  'webp-to-jpg': ['Lossy, quality 1–100', 'Filled with a colour you choose', 'One JPG per frame'],
 };
 
 const steps: Step[] = [

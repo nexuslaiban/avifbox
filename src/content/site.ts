@@ -15,9 +15,11 @@ export const NAV = {
   converters: [
     { href: '/avif-to-png', label: 'AVIF to PNG', group: 'AVIF' },
     { href: '/avif-to-jpg', label: 'AVIF to JPG', group: 'AVIF' },
+    { href: '/avif-to-apng', label: 'AVIF to APNG', group: 'AVIF' },
     { href: '/jfif-to-jpg', label: 'JFIF to JPG', group: 'JFIF' },
     { href: '/jfif-to-png', label: 'JFIF to PNG', group: 'JFIF' },
     { href: '/webp-to-png', label: 'WebP to PNG', group: 'WebP' },
+    { href: '/webp-to-jpg', label: 'WebP to JPG', group: 'WebP' },
   ],
   guides: [
     { href: '/what-is-avif', label: 'What is AVIF?' },
@@ -50,6 +52,12 @@ export const RELATED = {
     note: 'Small files that every app and upload form accepts.',
     kind: 'Converter',
   },
+  avifToApng: {
+    href: '/avif-to-apng',
+    label: 'AVIF to APNG',
+    note: 'An animated AVIF as one PNG that still moves.',
+    kind: 'Converter',
+  },
   jfifToJpg: {
     href: '/jfif-to-jpg',
     label: 'JFIF to JPG',
@@ -66,6 +74,12 @@ export const RELATED = {
     href: '/webp-to-png',
     label: 'WebP to PNG',
     note: 'Keeps transparency; splits animated WebP into frames.',
+    kind: 'Converter',
+  },
+  webpToJpg: {
+    href: '/webp-to-jpg',
+    label: 'WebP to JPG',
+    note: 'Small files for anything that refuses WebP.',
     kind: 'Converter',
   },
   whatIsAvif: {

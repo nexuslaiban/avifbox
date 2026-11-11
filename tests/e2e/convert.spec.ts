@@ -384,6 +384,32 @@ test.describe('other tools', () => {
     expect(readPng(await downloadNamed(page, 'lossless.png')).data).toEqual(reference().data);
   });
 
+  test('AC-36 WebP to JPG: a still becomes a JPEG, an animation one JPG per frame', async ({ page }) => {
+    await page.goto('/webp-to-jpg');
+    await addFiles(page, 'lossless.webp', 'anim.webp');
+    await settled(page, 2);
+    const jpg = await downloadNamed(page, 'lossless.jpg');
+    expect([...jpg.subarray(0, 3)]).toEqual([0xff, 0xd8, 0xff]);
+    expect(readJpeg(jpg).width).toBeGreaterThan(0);
+    for (const name of ['anim-001.jpg', 'anim-002.jpg', 'anim-003.jpg'])
+      await expect(downloadLink(page, name)).toBeVisible();
+  });
+
+  test('AC-37 AVIF to APNG: an animation stays one moving PNG with no setting touched, a still is a plain PNG', async ({
+    page,
+  }) => {
+    await page.goto('/avif-to-apng');
+    await addFiles(page, 'anim.avif', 'still.avif');
+    await settled(page, 2);
+    const moving = pngChunks(await downloadNamed(page, 'anim.png'));
+    expect(moving.find((chunk) => chunk.type === 'acTL')?.data.readUInt32BE(0)).toBe(5);
+    expect(moving.filter((chunk) => chunk.type === 'fcTL')).toHaveLength(5);
+    const still = pngChunks(await downloadNamed(page, 'still.png'));
+    expect(still.some((chunk) => chunk.type === 'acTL')).toBe(false);
+    await openAdvanced(page);
+    await expect(page.getByRole('radio', { name: 'Animated PNG' })).toBeChecked();
+  });
+
   test('AC-05 an animated WebP is split into frames too', async ({ page }) => {
     await page.goto('/webp-to-png');
     await addFiles(page, 'anim.webp');

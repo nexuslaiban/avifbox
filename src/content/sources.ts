@@ -23,6 +23,10 @@ export const SOURCES = {
   webp: 'https://developers.google.com/speed/webp',
   /** The API that gives a page the frames of an animation; its table shows Safari without it. */
   imageDecoder: 'https://developer.mozilla.org/en-US/docs/Web/API/ImageDecoder',
+  /** The PNG specification (editor's draft): APNG extends the static format; software without it shows the static image. */
+  pngSpec: 'https://w3c.github.io/png/',
+  /** APNG support: 97.4% of browsers in use; Chrome 59, Firefox 3, Safari 8, Edge 79. */
+  caniuseApng: 'https://caniuse.com/apng',
   /** The project that compiles libavif to WebAssembly. */
   jsquash: 'https://github.com/jamsinclair/jSquash',
   cloudflarePrivacy: 'https://www.cloudflare.com/privacypolicy/',

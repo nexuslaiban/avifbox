@@ -9,6 +9,7 @@ export const webpToPng: ToolPage = {
   sourceLabel: 'WebP',
   accept: '.webp,image/webp',
   target: 'png',
+  sibling: { label: 'JPG', href: '/webp-to-jpg' },
   title: 'Convert WebP to PNG — Free, Batch, No Upload | AVIFBox',
   description:
     'Convert WebP to PNG free in your browser. Batch 50 files, keep transparency, split animated WebP into frames or an animated PNG. No upload, no sign-up.',
@@ -132,5 +133,5 @@ export const webpToPng: ToolPage = {
   input: 'WebP — lossy, lossless, animated',
   output: 'PNG (Truecolor or Optimized), animated PNG',
   metadata: 'Not copied: the PNG holds pixels, plus a colour profile if you ask for one',
-  related: [RELATED.avifToPng, RELATED.jfifToPng, RELATED.jfifToJpg, RELATED.whatIsAvif],
+  related: [RELATED.webpToJpg, RELATED.avifToPng, RELATED.jfifToPng, RELATED.whatIsAvif],
 };

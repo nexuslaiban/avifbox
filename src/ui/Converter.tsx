@@ -20,6 +20,8 @@ export interface ConverterProps {
   /** `accept` attribute for the file picker. Dropped and pasted files are not filtered by it. */
   accept: string;
   target: Target;
+  /** How animated input is exported to start with. Default: one file per frame. */
+  animation?: ConvertOptions['animation'];
   /** Let the visitor switch between PNG and JPG output (home page). */
   chooseTarget?: boolean;
   /** Always show the keep-original / re-encode choice (JFIF to JPG). */
@@ -31,13 +33,13 @@ const WIDE_PRIMARIES = new Set([9, 11, 12]); // BT.2020, DCI-P3, Display P3
 const MAX_MB = MAX_FILE_BYTES / (1024 * 1024);
 const ZIP_NAME = 'avifbox-images.zip';
 
-function initialOptions(target: Target): ConvertOptions {
+function initialOptions(target: Target, animation: ConvertOptions['animation'] = 'frames'): ConvertOptions {
   return {
     target,
     pngMode: 'truecolor',
     quality: 90,
     background: null,
-    animation: 'frames',
+    animation,
     tone: 'brightness',
     gamut: 'srgb',
     keepJpeg: true,
@@ -62,7 +64,7 @@ function saveAs(blob: Blob, name: string): void {
 }
 
 export default function Converter(props: ConverterProps) {
-  const store = useMemo(() => new ConverterStore(new Pool(), initialOptions(props.target)), []);
+  const store = useMemo(() => new ConverterStore(new Pool(), initialOptions(props.target, props.animation)), []);
   const state = useStore(store);
   const { items, notice } = state;
   const [capabilities, setCapabilities] = useState<Capabilities | null>(null);

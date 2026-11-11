@@ -10,7 +10,15 @@ import { addFiles, downloadNamed, settled } from './helpers';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const ORIGIN = 'https://avifbox.com';
-const TOOLS = ['/avif-to-png', '/avif-to-jpg', '/jfif-to-jpg', '/jfif-to-png', '/webp-to-png'];
+const TOOLS = [
+  '/avif-to-png',
+  '/avif-to-jpg',
+  '/avif-to-apng',
+  '/jfif-to-jpg',
+  '/jfif-to-png',
+  '/webp-to-png',
+  '/webp-to-jpg',
+];
 const GUIDES = ['/what-is-avif', '/how-to-open-avif-file'];
 const INFO = ['/about', '/privacy'];
 const PAGES = ['/', ...TOOLS, ...GUIDES, ...INFO];
@@ -147,6 +155,18 @@ test.describe('site structure', () => {
     expect(outOfRange, `word counts: ${JSON.stringify(counts)}`).toEqual([]);
   });
 
+  test('AC-36 WebP to PNG and WebP to JPG reach each other through the output tabs', async ({ page }) => {
+    for (const [from, to] of [
+      ['/webp-to-png', '/webp-to-jpg'],
+      ['/webp-to-jpg', '/webp-to-png'],
+    ]) {
+      await page.goto(from);
+      const other = page.getByRole('navigation', { name: 'Output format' }).getByRole('link');
+      await expect(other, from).toHaveCount(1);
+      await expect(other).toHaveAttribute('href', to);
+    }
+  });
+
   test('AC-32 the home page explains the converter: how-to, what is kept, FAQ, and matching data', async ({ page }) => {
     await page.goto('/');
     expect(await page.title()).toMatch(/^AVIF Converter/);
@@ -176,7 +196,9 @@ test.describe('site structure', () => {
       '/avif-to-jpg': ['/avif-to-png', '/how-to-open-avif-file'],
       '/jfif-to-png': ['/jfif-to-jpg'],
       '/jfif-to-jpg': ['/jfif-to-png'],
-      '/webp-to-png': ['/avif-to-png'],
+      '/webp-to-png': ['/avif-to-png', '/webp-to-jpg'],
+      '/webp-to-jpg': ['/webp-to-png'],
+      '/avif-to-apng': ['/avif-to-png'],
       '/what-is-avif': ['/avif-to-png', '/avif-to-jpg'],
       '/how-to-open-avif-file': ['/avif-to-png', '/avif-to-jpg'],
       '/': TOOLS,

@@ -67,7 +67,7 @@ export const avifToJpg: ToolPage = {
       id: 'animated',
       title: 'Animated AVIF becomes frames',
       body: [
-        `A JPG cannot move, so an animated AVIF is exported as one JPG per frame, numbered in order, with thumbnails to pick from. To keep the motion in a single file, choose Animated PNG on the <a href="/avif-to-png">PNG converter</a>. ${cite('imageDecoder', 'Frame access')} works in Chrome, Edge and Firefox; Safari only exposes the first frame.`,
+        `A JPG cannot move, so an animated AVIF is exported as one JPG per frame, numbered in order, with thumbnails to pick from. To keep the motion in a single file, use the <a href="/avif-to-apng">AVIF to APNG converter</a>. ${cite('imageDecoder', 'Frame access')} works in Chrome, Edge and Firefox; Safari only exposes the first frame.`,
       ],
     },
     {
