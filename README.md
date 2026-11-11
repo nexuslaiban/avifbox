@@ -29,7 +29,7 @@ plain static bundle with no backend.
 pnpm install
 pnpm dev          # local dev server
 pnpm test         # unit tests (Vitest)
-pnpm test:e2e     # builds, then runs Playwright in Chromium and Firefox
+pnpm test:e2e     # builds, then runs Playwright in Chromium, Firefox and WebKit
 pnpm check        # type check
 pnpm build        # static site in dist/
 ```

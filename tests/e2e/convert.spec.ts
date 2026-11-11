@@ -149,6 +149,9 @@ test.describe('AVIF to PNG', () => {
   });
 
   test('AC-07 Display P3 output keeps the wide-gamut values and embeds the profile', async ({ page, browserName }) => {
+    // Converting a decoded image to the canvas's colour space is the port's job, not the engine's. Safari does it
+    // through the system; that cannot be checked from here.
+    test.skip(browserName === 'webkit', 'WebKit on Linux hands over a wide-gamut AVIF without converting it');
     await addFiles(page, 'p3.avif');
     await settled(page, 1);
     const srgb = await downloadNamed(page, 'p3.png');

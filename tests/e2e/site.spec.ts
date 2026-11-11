@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { SOURCES } from '../../src/content/sources';
 import { PNG } from 'pngjs';
 import { formatBytes } from '../../src/ui/format';
-import { addFiles, downloadNamed, expectSameBytes, settled } from './helpers';
+import { addFiles, downloadNamed, expectSameBytes, expectSamePixels, readPng, settled } from './helpers';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const ORIGIN = 'https://avifbox.com';
@@ -263,6 +263,7 @@ test.describe('site structure', () => {
 
   test('AC-26 sample sizes on the page are the real file sizes, and the results come from this converter', async ({
     page,
+    browserName,
   }) => {
     await page.goto('/avif-to-png');
     await expect(page.locator('#samples .sample')).toHaveCount(3);
@@ -287,18 +288,18 @@ test.describe('site structure', () => {
       );
     }
 
-    // Converting the published source again must reproduce the published result byte for byte.
+    // Converting the published source again must reproduce the published result: the same picture in every
+    // engine and, in Chromium, which made the samples, the same file. Engines deflate differently.
     await addFiles(page, {
       name: 'transparent.avif',
       mimeType: 'image/avif',
       buffer: readFileSync(join(ROOT, 'public', 'samples', 'transparent.avif')),
     });
     await settled(page, 1);
-    expectSameBytes(
-      await downloadNamed(page, 'transparent.png'),
-      readFileSync(join(ROOT, 'public', 'samples', 'transparent.png')),
-      'transparent.png, converted again',
-    );
+    const converted = await downloadNamed(page, 'transparent.png');
+    const published = readFileSync(join(ROOT, 'public', 'samples', 'transparent.png'));
+    expectSamePixels(readPng(converted), readPng(published), 'transparent.png, converted again');
+    if (browserName === 'chromium') expectSameBytes(converted, published, 'transparent.png, converted again');
   });
 
   test('a sample can be loaded into the converter from the drop zone', async ({ page }) => {
