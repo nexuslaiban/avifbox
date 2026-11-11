@@ -17,6 +17,16 @@ interface Props {
 const { title, description, path, jsonLd = [], noindex = false } = Astro.props;
 const canonical = new URL(path, SITE.url).href;
 const current = (href: string) => (href === path ? 'page' : undefined);
+const holds = (links: readonly { href: string }[]) => links.some((link) => link.href === path);
+const formats = [...new Set(NAV.converters.map((link) => link.group))];
+/** Header menus: a button, and under it one list of links per group. */
+const menus = [
+  {
+    label: 'Converters',
+    groups: formats.map((title) => ({ title, links: NAV.converters.filter((link) => link.group === title) })),
+  },
+  { label: 'Guides', groups: [{ title: undefined, links: NAV.guides }] },
+];
 const footerGroups = [
   ['Converters', NAV.converters],
   ['Guides', NAV.guides],
@@ -74,11 +84,30 @@ const footerGroups = [
         </a>
         <nav class="site-nav" aria-label="Converters and guides">
           <ul>
-            {[...NAV.converters, ...NAV.guides].map((link) => (
+            {menus.map((item) => (
               <li>
-                <a href={link.href} aria-current={current(link.href)}>
-                  {link.label}
-                </a>
+                <details
+                  name="site-menu"
+                  data-current={item.groups.some((group) => holds(group.links)) ? '' : undefined}
+                >
+                  <summary>{item.label}</summary>
+                  <div class="menu">
+                    {item.groups.map(({ title, links }) => (
+                      <div>
+                        {title && <p id={`menu-${title.toLowerCase()}`}>{title}</p>}
+                        <ul aria-labelledby={title && `menu-${title.toLowerCase()}`}>
+                          {links.map((link) => (
+                            <li>
+                              <a href={link.href} aria-current={current(link.href)}>
+                                {link.label}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </details>
               </li>
             ))}
           </ul>
@@ -114,5 +143,18 @@ const footerGroups = [
         </p>
       </div>
     </footer>
+    <script>
+      // The menus open, close and exclude each other without this. It adds Escape and a click elsewhere.
+      const menus = [...document.querySelectorAll<HTMLDetailsElement>('.site-nav details')];
+      document.addEventListener('click', (event) => {
+        for (const menu of menus) if (!menu.contains(event.target as Node)) menu.open = false;
+      });
+      document.addEventListener('keydown', (event) => {
+        const open = event.key === 'Escape' ? menus.find((menu) => menu.open) : undefined;
+        if (!open) return;
+        open.open = false;
+        open.querySelector('summary')?.focus();
+      });
+    </script>
   </body>
 </html>

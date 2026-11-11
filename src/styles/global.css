@@ -272,10 +272,10 @@ img {
   font-weight: 900;
 }
 
-.site-nav ul {
+.site-nav > ul {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.15rem 1.15rem;
+  gap: 0.15rem 1.5rem;
   list-style: none;
   padding: 0;
   font: 0.86rem/1.4 var(--font-mono);
@@ -283,16 +283,79 @@ img {
   letter-spacing: 0.04em;
 }
 
-.site-nav a {
-  display: inline-block;
-  padding-block: 0.35rem;
-  text-decoration: none;
-  border-bottom: 2px solid transparent;
+.site-nav details {
+  position: relative;
 }
 
-.site-nav a:hover,
-.site-nav a[aria-current='page'] {
+.site-nav summary {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding-block: 0.35rem;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.site-nav summary::-webkit-details-marker {
+  display: none;
+}
+
+/* the caret: down when closed, up when open */
+.site-nav summary::after {
+  content: '';
+  width: 0.4rem;
+  height: 0.4rem;
+  border: solid currentColor;
+  border-width: 0 2px 2px 0;
+  transform: translateY(-0.12rem) rotate(45deg);
+}
+
+.site-nav details[open] summary::after {
+  transform: translateY(0.1rem) rotate(-135deg);
+}
+
+.site-nav summary:hover,
+.site-nav details[open] summary,
+.site-nav details[data-current] summary,
+.menu a:hover,
+.menu a[aria-current='page'] {
   border-bottom-color: var(--accent);
+}
+
+.menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  display: flex;
+  gap: 1rem 1.75rem;
+  padding: 1rem 1.25rem;
+  background: var(--card);
+  border: 2px solid var(--ink);
+  box-shadow: var(--shadow);
+  white-space: nowrap;
+}
+
+.menu p {
+  margin-bottom: 0.3rem;
+  color: var(--ink-soft);
+  font-size: 0.76rem;
+}
+
+.menu ul {
+  display: grid;
+  gap: 0.1rem;
+  list-style: none;
+  padding: 0;
+}
+
+.menu a {
+  display: inline-block;
+  padding-block: 0.3rem;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
 }
 
 .site-footer {
@@ -335,29 +398,25 @@ img {
     grid-template-columns: 1fr;
   }
 
-  /* One swipeable row instead of a four-line block above the tool. */
   .site-header .wrap {
-    padding-block: 0.5rem 0;
+    padding-block: 0.5rem 0.3rem;
     gap: 0.25rem;
   }
 
+  /* An open menu spans the header instead of hanging from its button. */
   .site-nav {
+    position: relative;
     width: 100%;
-    margin-inline: -1.25rem;
-    width: calc(100% + 2.5rem);
-    overflow-x: auto;
-    scrollbar-width: none;
   }
 
-  .site-nav::-webkit-scrollbar {
-    display: none;
+  .site-nav details {
+    position: static;
   }
 
-  .site-nav ul {
-    flex-wrap: nowrap;
-    white-space: nowrap;
-    padding-inline: 1.25rem;
-    width: max-content;
+  .menu {
+    top: 100%;
+    left: 0;
+    flex-wrap: wrap;
   }
 
   .brand {

@@ -244,6 +244,136 @@ test.describe('site structure', () => {
   });
 });
 
+/** A header menu, found by the text of its button. */
+const menu = (page: Page, name: string) =>
+  page.locator('.site-header details').filter({ has: page.locator('summary', { hasText: name }) });
+
+test.describe('header menu', () => {
+  test('AC-34 both menus are in every page, closed, with all their links and the current page marked', async ({
+    page,
+  }) => {
+    for (const path of PAGES) {
+      await page.goto(path);
+      await expect(page.locator('.site-header details'), path).toHaveCount(2);
+      await expect(page.locator('.site-header details[open]'), path).toHaveCount(0);
+
+      const hrefs = (name: string) =>
+        menu(page, name)
+          .locator('a')
+          .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
+      expect((await hrefs('Converters')).sort(), `${path}: Converters`).toEqual([...TOOLS].sort());
+      expect((await hrefs('Guides')).sort(), `${path}: Guides`).toEqual([...GUIDES].sort());
+      await expect(menu(page, 'Converters').locator('a').first(), path).toBeHidden();
+
+      const inMenu = [...TOOLS, ...GUIDES].includes(path);
+      const current = await page
+        .locator('.site-header a[aria-current="page"]')
+        .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
+      expect(current, `${path}: current link`).toEqual(inMenu ? [path] : []);
+      const marked = page.locator('.site-header details[data-current]');
+      await expect(marked, `${path}: current menu`).toHaveCount(inMenu ? 1 : 0);
+      if (inMenu) await expect(marked.locator(`a[href="${path}"]`), path).toHaveCount(1);
+    }
+  });
+
+  test('AC-34 a menu opens by click or keyboard, closes its sibling, and closes on Escape or a click elsewhere', async ({
+    page,
+  }) => {
+    await page.goto('/avif-to-png');
+    const converters = menu(page, 'Converters');
+    const guides = menu(page, 'Guides');
+
+    await converters.locator('summary').click();
+    await expect(converters).toHaveJSProperty('open', true);
+    let grouped = 0;
+    for (const group of ['AVIF', 'JFIF', 'WebP']) {
+      const links = converters.getByRole('list', { name: group, exact: true }).getByRole('link');
+      await expect(links.first(), group).toBeVisible();
+      for (const label of await links.allTextContents()) expect(label.trim(), group).toMatch(new RegExp(`^${group} `));
+      grouped += await links.count();
+    }
+    expect(grouped, 'converters under a format heading').toBe(TOOLS.length);
+
+    await guides.locator('summary').click();
+    await expect(guides).toHaveJSProperty('open', true);
+    await expect(converters).toHaveJSProperty('open', false);
+
+    await page.keyboard.press('Escape');
+    await expect(guides).toHaveJSProperty('open', false);
+    await expect(guides.locator('summary')).toBeFocused();
+
+    await converters.locator('summary').focus();
+    await page.keyboard.press('Enter');
+    await expect(converters).toHaveJSProperty('open', true);
+    await page.keyboard.press('Tab');
+    await expect(converters.getByRole('link').first()).toBeFocused();
+
+    await page.locator('h1').click();
+    await expect(converters).toHaveJSProperty('open', false);
+
+    await converters.locator('summary').click();
+    await converters.getByRole('link', { name: 'JFIF to PNG', exact: true }).click();
+    await expect(page).toHaveURL(/\/jfif-to-png$/);
+  });
+
+  test('AC-34 an open menu fits a phone screen', async ({ page }) => {
+    const width = 412;
+    await page.setViewportSize({ width, height: 915 });
+    await page.goto('/what-is-avif');
+    for (const name of ['Converters', 'Guides']) {
+      await menu(page, name).locator('summary').click();
+      const links = menu(page, name).getByRole('link');
+      const count = await links.count();
+      expect(count, name).toBeGreaterThan(0);
+      for (let index = 0; index < count; index++) {
+        const box = (await links.nth(index).boundingBox())!;
+        expect(box.x, `${name} link ${index}`).toBeGreaterThanOrEqual(0);
+        expect(box.x + box.width, `${name} link ${index}`).toBeLessThanOrEqual(width);
+      }
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow, `${name}: horizontal overflow`).toBe(0);
+    }
+  });
+
+  for (const scheme of ['light', 'dark'] as const) {
+    test(`AC-34 an open menu has no serious axe violation (${scheme})`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
+      await page.goto('/avif-to-jpg');
+      await menu(page, 'Converters').locator('summary').click();
+      await expect(menu(page, 'Converters').getByRole('link').first()).toBeVisible();
+      const results = await new AxeBuilder({ page }).analyze();
+      const serious = results.violations.filter(
+        (violation) => violation.impact === 'serious' || violation.impact === 'critical',
+      );
+      expect(
+        serious.map(
+          (violation) => `${violation.id} — ${violation.nodes.map((node) => node.target.join(' ')).join(', ')}`,
+        ),
+      ).toEqual([]);
+    });
+  }
+
+  test.describe('without JavaScript', () => {
+    test.use({ javaScriptEnabled: false });
+
+    test('AC-34 a menu still opens and closes by click', async ({ page }) => {
+      await page.goto('/what-is-avif');
+      const converters = menu(page, 'Converters');
+      const guides = menu(page, 'Guides');
+
+      await converters.locator('summary').click();
+      await expect(converters.getByRole('link').first()).toBeVisible();
+      await guides.locator('summary').click();
+      await expect(guides.getByRole('link').first()).toBeVisible();
+      await expect(converters.locator('a').first()).toBeHidden();
+      await guides.locator('summary').click();
+      await expect(guides.locator('a').first()).toBeHidden();
+    });
+  });
+});
+
 test.describe('who runs the site', () => {
   test('AC-33 every footer links to /about and /privacy, and the Organization data is one entity', async ({
     page,

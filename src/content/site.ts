@@ -11,12 +11,13 @@ export const SITE = {
 export const LIMITS = `${MAX_FILES} files per batch, ${MAX_FILE_BYTES / (1024 * 1024)} MB each`;
 
 export const NAV = {
+  /** `group` is the source format; the header menu lists the converters under it. */
   converters: [
-    { href: '/avif-to-png', label: 'AVIF to PNG' },
-    { href: '/avif-to-jpg', label: 'AVIF to JPG' },
-    { href: '/jfif-to-jpg', label: 'JFIF to JPG' },
-    { href: '/jfif-to-png', label: 'JFIF to PNG' },
-    { href: '/webp-to-png', label: 'WebP to PNG' },
+    { href: '/avif-to-png', label: 'AVIF to PNG', group: 'AVIF' },
+    { href: '/avif-to-jpg', label: 'AVIF to JPG', group: 'AVIF' },
+    { href: '/jfif-to-jpg', label: 'JFIF to JPG', group: 'JFIF' },
+    { href: '/jfif-to-png', label: 'JFIF to PNG', group: 'JFIF' },
+    { href: '/webp-to-png', label: 'WebP to PNG', group: 'WebP' },
   ],
   guides: [
     { href: '/what-is-avif', label: 'What is AVIF?' },
