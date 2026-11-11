@@ -5,6 +5,7 @@ export const SITE = {
   name: 'AVIFBox',
   url: 'https://avifbox.com',
   tagline: 'Image converters that run in your browser',
+  email: 'hello@avifbox.com',
 } as const;
 
 export const LIMITS = `${MAX_FILES} files per batch, ${MAX_FILE_BYTES / (1024 * 1024)} MB each`;
@@ -20,6 +21,10 @@ export const NAV = {
   guides: [
     { href: '/what-is-avif', label: 'What is AVIF?' },
     { href: '/how-to-open-avif-file', label: 'Open an AVIF file' },
+  ],
+  about: [
+    { href: '/about', label: 'About AVIFBox' },
+    { href: '/privacy', label: 'Privacy' },
   ],
 } as const;
 

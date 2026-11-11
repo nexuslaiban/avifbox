@@ -3,6 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { SOURCES } from '../../src/content/sources';
 import { formatBytes } from '../../src/ui/format';
 import { addFiles, downloadNamed, settled } from './helpers';
 
@@ -10,7 +11,9 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const ORIGIN = 'https://avifbox.com';
 const TOOLS = ['/avif-to-png', '/avif-to-jpg', '/jfif-to-jpg', '/jfif-to-png', '/webp-to-png'];
 const GUIDES = ['/what-is-avif', '/how-to-open-avif-file'];
-const PAGES = ['/', ...TOOLS, ...GUIDES];
+const INFO = ['/about', '/privacy'];
+const PAGES = ['/', ...TOOLS, ...GUIDES, ...INFO];
+const ORGANIZATION = `${ORIGIN}/#organization`;
 
 /** Words of body copy: everything in <main> except the interactive tool. */
 async function bodyWords(page: Page): Promise<number> {
@@ -32,12 +35,38 @@ async function jsonLd(page: Page): Promise<Record<string, any>[]> {
   return blocks.map((block) => JSON.parse(block));
 }
 
+/** A free application at `url`, as SoftwareApplication data. */
+function expectFreeApp(data: Record<string, any>[], url: string): void {
+  const app = data.find((block) => block['@type'] === 'SoftwareApplication');
+  expect(app, url).toBeTruthy();
+  expect(app!.url).toBe(url);
+  expect(app!.offers).toMatchObject({ price: '0', priceCurrency: 'USD' });
+}
+
+/** The FAQPage data must be the FAQ a visitor sees: the same questions and answers, in the same order. */
+async function expectFaqData(page: Page, data: Record<string, any>[], atLeast: number): Promise<void> {
+  const faq = data.find((block) => block['@type'] === 'FAQPage');
+  expect(faq, page.url()).toBeTruthy();
+  const questions = faq!.mainEntity.map((entry: any) => entry.name);
+  expect(questions.length, page.url()).toBeGreaterThanOrEqual(atLeast);
+  expect(await page.locator('#faq dt').allTextContents()).toEqual(questions);
+  const answers = (await page.locator('#faq dd').allTextContents()).map((text) => text.trim());
+  expect(faq!.mainEntity.map((entry: any) => entry.acceptedAnswer.text)).toEqual(answers);
+}
+
 /** Site-relative link targets inside <main>, without fragments. */
 async function contentLinks(page: Page): Promise<string[]> {
   return page.evaluate(() =>
     [...document.querySelectorAll<HTMLAnchorElement>('main a[href^="/"]')].map(
       (a) => a.getAttribute('href')!.split('#')[0],
     ),
+  );
+}
+
+/** Absolute link targets inside <main>, as written in the markup. */
+async function externalLinks(page: Page): Promise<string[]> {
+  return page.evaluate(() =>
+    [...document.querySelectorAll<HTMLAnchorElement>('main a[href^="http"]')].map((a) => a.getAttribute('href')!),
   );
 }
 
@@ -80,6 +109,28 @@ test.describe('site structure', () => {
     expect(descriptions.size).toBe(PAGES.length);
   });
 
+  // A template drops the space before an inline element that starts a line unless it is written as {' '}.
+  test('no link or emphasis is glued to the word next to it', async ({ page }) => {
+    let checked = 0;
+    for (const path of PAGES) {
+      await page.goto(path);
+      const { count, glued } = await page.evaluate(() => {
+        const text = (node: ChildNode | null) => (node?.nodeType === Node.TEXT_NODE ? (node.textContent ?? '') : '');
+        const inline = [...document.querySelectorAll('main :is(a, strong, em, code)')];
+        return {
+          count: inline.length,
+          glued: inline
+            .map((node) => [text(node.previousSibling), node.textContent ?? '', text(node.nextSibling)])
+            .filter(([before, , after]) => /[\p{L}\p{N},.;:!?)]$/u.test(before) || /^[\p{L}\p{N}(]/u.test(after))
+            .map(([before, inner, after]) => `${before.slice(-10)}[${inner}]${after.slice(0, 10)}`),
+        };
+      });
+      expect(glued, `${path}: glued to the next word`).toEqual([]);
+      checked += count;
+    }
+    expect(checked, 'inline elements looked at').toBeGreaterThan(100);
+  });
+
   test('AC-23 tool pages carry SoftwareApplication and FAQ data that match the page, and 900–1,300 words', async ({
     page,
   }) => {
@@ -87,23 +138,32 @@ test.describe('site structure', () => {
     for (const path of TOOLS) {
       await page.goto(path);
       const data = await jsonLd(page);
-      const app = data.find((block) => block['@type'] === 'SoftwareApplication');
-      expect(app, path).toBeTruthy();
-      expect(app!.url).toBe(`${ORIGIN}${path}`);
-      expect(app!.offers).toMatchObject({ price: '0', priceCurrency: 'USD' });
-
-      const faq = data.find((block) => block['@type'] === 'FAQPage');
-      expect(faq, path).toBeTruthy();
-      const questions = faq!.mainEntity.map((entry: any) => entry.name);
-      expect(questions.length, path).toBeGreaterThanOrEqual(7);
-      expect(await page.locator('#faq dt').allTextContents()).toEqual(questions);
-      const answers = (await page.locator('#faq dd').allTextContents()).map((text) => text.trim());
-      expect(faq!.mainEntity.map((entry: any) => entry.acceptedAnswer.text)).toEqual(answers);
-
+      expectFreeApp(data, `${ORIGIN}${path}`);
+      await expectFaqData(page, data, 7);
       counts[path] = await bodyWords(page);
     }
     const outOfRange = Object.entries(counts).filter(([, words]) => words < 900 || words > 1300);
     expect(outOfRange, `word counts: ${JSON.stringify(counts)}`).toEqual([]);
+  });
+
+  test('AC-32 the home page explains the converter: how-to, what is kept, FAQ, and matching data', async ({ page }) => {
+    await page.goto('/');
+    expect(await page.title()).toMatch(/^AVIF Converter/);
+
+    const data = await jsonLd(page);
+    expect(data.some((block) => block['@type'] === 'WebSite')).toBe(true);
+    expectFreeApp(data, `${ORIGIN}/`);
+    await expectFaqData(page, data, 6);
+
+    await expect(page.locator('#how-to .steps > li')).toHaveCount(3);
+    const converted = await page
+      .locator('#formats table a')
+      .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
+    expect(converted.sort()).toEqual([...TOOLS].sort());
+
+    const words = await bodyWords(page);
+    expect(words, 'home page body copy').toBeGreaterThanOrEqual(500);
+    expect(words, 'home page body copy').toBeLessThanOrEqual(900);
   });
 
   test('AC-24 pages link to each other as the sitemap plan says, and no internal link is broken', async ({
@@ -119,6 +179,8 @@ test.describe('site structure', () => {
       '/what-is-avif': ['/avif-to-png', '/avif-to-jpg'],
       '/how-to-open-avif-file': ['/avif-to-png', '/avif-to-jpg'],
       '/': TOOLS,
+      '/about': ['/privacy'],
+      '/privacy': ['/about'],
     };
     const seen = new Set<string>();
     for (const path of PAGES) {
@@ -180,6 +242,193 @@ test.describe('site structure', () => {
     await expect(page.getByRole('list', { name: 'Files', exact: true })).toContainText('hdr.avif');
     await expect(page.getByRole('list', { name: 'Files', exact: true })).toContainText('tone-mapped');
   });
+});
+
+test.describe('who runs the site', () => {
+  test('AC-33 every footer links to /about and /privacy, and the Organization data is one entity', async ({
+    page,
+    request,
+  }) => {
+    for (const path of PAGES) {
+      await page.goto(path);
+      const footer = await page
+        .locator('footer a')
+        .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
+      for (const target of INFO) expect(footer, `${path}: footer link to ${target}`).toContain(target);
+    }
+
+    for (const path of ['/', '/about']) {
+      await page.goto(path);
+      const organization = (await jsonLd(page)).find((block) => block['@type'] === 'Organization');
+      expect(organization, `${path}: Organization data`).toBeTruthy();
+      expect(organization).toMatchObject({ '@id': ORGANIZATION, name: 'AVIFBox', url: ORIGIN });
+
+      // Search engines ask for a logo they can fetch, at least 112 px on each side.
+      expect(organization!.logo, path).toMatch(new RegExp(`^${ORIGIN}/[^/]+\\.png$`));
+      const file = new URL(organization!.logo).pathname;
+      expect((await request.get(file)).headers()['content-type'], file).toBe('image/png');
+      const png = readFileSync(join(ROOT, 'dist', file));
+      expect(Math.min(png.readUInt32BE(16), png.readUInt32BE(20)), `${file}: shorter side`).toBeGreaterThanOrEqual(112);
+    }
+
+    for (const path of GUIDES) {
+      await page.goto(path);
+      const article = (await jsonLd(page)).find((block) => block['@type'] === 'Article');
+      for (const role of ['author', 'publisher'])
+        expect(article?.[role]?.['@id'], `${path}: Article.${role}`).toBe(ORGANIZATION);
+    }
+  });
+
+  test('AC-33 /about says how to reach the site, and /privacy says what it does and does not see', async ({ page }) => {
+    await page.goto('/about');
+    await expect(page.locator('main a[href="mailto:hello@avifbox.com"]').first()).toBeVisible();
+
+    await page.goto('/privacy');
+    const text = ((await page.locator('main').textContent()) ?? '').replace(/\s+/g, ' ');
+    const claims = [
+      /converted on your own device/i,
+      /never uploaded/i,
+      /no cookies/i,
+      /no analytics/i,
+      /no ads/i,
+      /served by Cloudflare/i,
+    ];
+    expect(claims.filter((claim) => !claim.test(text)).map(String), '/privacy: statements missing').toEqual([]);
+    expect(await externalLinks(page)).toContain('https://www.cloudflare.com/privacypolicy/');
+  });
+});
+
+test.describe('citations', () => {
+  test('AC-30 external links are registered sources, the guides cite them, and the corrected facts are in', async ({
+    page,
+  }) => {
+    const registered = new Set<string>(Object.values(SOURCES));
+    for (const href of registered) expect(href).toMatch(/^https:\/\//);
+
+    const cited: Record<string, Set<string>> = {};
+    for (const path of PAGES) {
+      await page.goto(path);
+      const links = await externalLinks(page);
+      expect(
+        links.filter((href) => !registered.has(href)),
+        `${path}: links outside the registry`,
+      ).toEqual([]);
+      cited[path] = new Set(links);
+
+      const text = (await page.locator('main').textContent()) ?? '';
+      expect(/about 95%/i.test(text), `${path}: still says "about 95%"`).toBe(false);
+      if (GUIDES.includes(path)) {
+        expect(text.includes('26.8'), `${path}: names Photoshop 26.8`).toBe(true);
+        expect(text.includes('23.2'), `${path}: still names Photoshop 23.2`).toBe(false);
+      }
+    }
+
+    for (const path of GUIDES) expect(cited[path].size, `${path}: sources cited`).toBeGreaterThanOrEqual(4);
+    expect([...cited['/how-to-open-avif-file']]).toContain(SOURCES.av1Extension);
+    for (const path of TOOLS) expect(cited[path].size, `${path}: sources cited`).toBeGreaterThanOrEqual(1);
+  });
+});
+
+test.describe('guide dates', () => {
+  test('AC-31 guides show when they were updated, and the Article data and the sitemap agree', async ({
+    page,
+    request,
+  }) => {
+    const sitemap = await (await request.get('/sitemap-0.xml')).text();
+    const lastmod = new Map(
+      [...sitemap.matchAll(/<url><loc>([^<]+)<\/loc>(?:<lastmod>([^<]+)<\/lastmod>)?/g)].map((match) => [
+        match[1],
+        match[2],
+      ]),
+    );
+    expect(lastmod.size).toBe(PAGES.length);
+
+    for (const path of GUIDES) {
+      await page.goto(path);
+      const article = (await jsonLd(page)).find((block) => block['@type'] === 'Article')!;
+      expect(article.dateModified, path).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(article.datePublished <= article.dateModified, `${path}: published before modified`).toBe(true);
+
+      const time = page.locator('main time');
+      await expect(time, path).toHaveCount(1);
+      await expect(time).toHaveAttribute('datetime', article.dateModified);
+      await expect(time.locator('..')).toHaveText(/^Updated /);
+      // The date people read is the same day as the one machines read.
+      const printed = new Date(`${await time.textContent()} UTC`);
+      expect(printed.toISOString().slice(0, 10), path).toBe(article.dateModified);
+
+      expect(lastmod.get(`${ORIGIN}${path}`)?.slice(0, 10), `${path}: sitemap lastmod`).toBe(article.dateModified);
+    }
+
+    const dated = [...lastmod].filter(([, day]) => day).map(([url]) => url);
+    expect(dated.sort()).toEqual(GUIDES.map((path) => `${ORIGIN}${path}`).sort());
+  });
+});
+
+/** Layout shift score of a page whose web fonts only arrive after it has been painted in fallback fonts. */
+async function shiftWithLateFonts(page: Page, path: string): Promise<number> {
+  let release = (): void => {};
+  const held = new Promise<void>((resolve) => (release = resolve));
+  await page.route('**/*.woff2', async (route) => {
+    await held;
+    await route.continue();
+  });
+  await page.goto(path, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => performance.getEntriesByName('first-contentful-paint').length > 0);
+  // Without this the test could pass having measured nothing: the first paint must be in fallback fonts.
+  const early = await page.evaluate(
+    () => performance.getEntriesByType('resource').filter((entry) => entry.name.endsWith('.woff2')).length,
+  );
+  expect(early, `${path}: web fonts arrived before the first paint`).toBe(0);
+
+  release();
+  await page.waitForFunction(
+    () =>
+      document.fonts.status === 'loaded' &&
+      [...document.fonts].some((face) => face.family.includes('Big Shoulders') && face.status === 'loaded'),
+  );
+  await page.unroute('**/*.woff2');
+  // Two frames: one lays the text out again in the web font, the next has the shift on record.
+  return page.evaluate(
+    () =>
+      new Promise<number>((resolve) =>
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => resolve((window as unknown as { layoutShift(): number }).layoutShift())),
+        ),
+      ),
+  );
+}
+
+test.describe('layout stability', () => {
+  const viewports = { phone: { width: 412, height: 915 }, desktop: { width: 1280, height: 800 } };
+
+  for (const [name, viewport] of Object.entries(viewports)) {
+    test(`AC-29 web fonts that arrive late do not move the page (${name})`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      // Chrome does not reliably score movement inside the entrance animation, which starts at opacity 0.
+      // Without the animation every shift counts.
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await page.addInitScript(() => {
+        let total = 0;
+        const add = (entries: PerformanceEntry[]) => {
+          for (const entry of entries as (PerformanceEntry & { value: number; hadRecentInput: boolean })[])
+            if (!entry.hadRecentInput) total += entry.value;
+        };
+        const observer = new PerformanceObserver((list) => add(list.getEntries()));
+        observer.observe({ type: 'layout-shift', buffered: true });
+        (window as unknown as { layoutShift(): number }).layoutShift = () => {
+          add(observer.takeRecords());
+          return total;
+        };
+      });
+
+      const scores: Record<string, number> = {};
+      for (const path of PAGES) scores[path] = Number((await shiftWithLateFonts(page, path)).toFixed(3));
+      // 0.1 is the upper bound of a "good" Cumulative Layout Shift in Core Web Vitals.
+      const moved = Object.entries(scores).filter(([, score]) => score > 0.1);
+      expect(moved, `layout shift per page: ${JSON.stringify(scores)}`).toEqual([]);
+    });
+  }
 });
 
 test.describe('viewer', () => {

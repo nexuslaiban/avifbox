@@ -1,0 +1,142 @@
+---
+import Base from '../layouts/Base.astro';
+import Cards from '../components/Cards.astro';
+import { RELATED, SITE } from '../content/site';
+import { longDate } from '../content/dates';
+import { SOURCES } from '../content/sources';
+
+const title = 'Privacy Policy — Your Images Never Leave Your Device | AVIFBox';
+const description =
+  'AVIFBox converts images in your browser: files are never uploaded, and there are no cookies, analytics or ads. What the site and its host, Cloudflare, can see.';
+/** The day this policy last changed. */
+const updated = '2026-11-11';
+---
+
+<Base title={title} description={description} path="/privacy">
+  <section class="band">
+    <div class="wrap reveal">
+      <p class="label">
+        <span>
+          <small>Document</small>
+          <strong>Privacy policy</strong>
+        </span>
+        <span>
+          <small>Subject</small>
+          <strong>Your files</strong>
+        </span>
+        <span class="barcode" aria-hidden="true"></span>
+      </p>
+      <h1>
+        Privacy <em>policy</em>
+      </h1>
+      <p class="lede">
+        The short version: your images are converted on your own device and are never uploaded. There are no cookies, no
+        analytics and no ads.
+      </p>
+      <p class="dateline">
+        Updated <time datetime={updated}>{longDate(updated)}</time>
+      </p>
+    </div>
+  </section>
+
+  <article class="doc wrap">
+    <section class="split">
+      <section id="images">
+        <div class="sec-head">
+          <span class="sec-no">№ 01</span>
+          <h2>Your images</h2>
+        </div>
+        <div class="prose">
+          <p>
+            Your browser decodes and re-encodes each image in its own memory. The file is not sent to AVIFBox or to
+            anyone else, and nothing is kept: reload or close the page and it is gone.
+          </p>
+          <p>
+            This is built in rather than promised. The site is a set of static files, so there is no upload address to
+            send an image to, and each page’s security policy only allows connections to avifbox.com. Your browser’s
+            network panel will show that converting sends nothing.
+          </p>
+          <p>
+            The only things the converter fetches are its own code and, if you press one of the sample buttons, a sample
+            image — both from avifbox.com.
+          </p>
+        </div>
+      </section>
+
+      <section id="not">
+        <div class="sec-head">
+          <span class="sec-no">№ 02</span>
+          <h2>What the site does not do</h2>
+        </div>
+        <div class="prose">
+          <ul>
+            <li>
+              <strong>No cookies.</strong> AVIFBox sets none, and saves nothing in your browser’s storage.
+            </li>
+            <li>
+              <strong>No analytics.</strong> No tracking scripts, pixels or fingerprinting.
+            </li>
+            <li>
+              <strong>No ads</strong>, and nothing from third parties: scripts, fonts and images all come from
+              avifbox.com.
+            </li>
+            <li>
+              <strong>No accounts</strong>, so there is no profile, password or email address to keep.
+            </li>
+          </ul>
+        </div>
+      </section>
+    </section>
+
+    <section class="split">
+      <section id="host">
+        <div class="sec-head">
+          <span class="sec-no">№ 03</span>
+          <h2>What the host can see</h2>
+        </div>
+        <div class="prose">
+          <p>
+            The site is served by Cloudflare. Like any network that delivers a website, it handles every request, and so
+            sees the IP address the request came from, the address of the page and the browser’s user-agent. Cloudflare
+            uses this to deliver the site and to protect it from abuse, under{' '}
+            <a href={SOURCES.cloudflarePrivacy}>its own privacy policy</a>.
+          </p>
+          <p>
+            AVIFBox adds nothing to that: it has no server-side code, no database and no logs of its own. The site’s
+            operator sees traffic figures in Cloudflare’s dashboard, such as how many requests arrived and from which
+            countries.
+          </p>
+          <p>
+            One thing your browser may do by itself: if it fails to reach the site, it can send Cloudflare a report of
+            the failed request — the address and the kind of error — so that network faults get noticed. Cloudflare{' '}
+            <a href={SOURCES.cloudflareNel}>says it does not store the IP address</a> such a report comes from.
+          </p>
+        </div>
+      </section>
+
+      <section id="contact">
+        <div class="sec-head">
+          <span class="sec-no">№ 04</span>
+          <h2>If you write in</h2>
+        </div>
+        <div class="prose">
+          <p>
+            If you email <a href={`mailto:${SITE.email}`}>{SITE.email}</a>, your address and your message are used to
+            answer you, and for nothing else.
+          </p>
+          <p>
+            What AVIFBox is and how it works is on the <a href="/about">About page</a>. When this policy changes, the
+            date at the top changes with it.
+          </p>
+        </div>
+      </section>
+    </section>
+
+    <Cards
+      id="related"
+      number="№ 05"
+      title="More from the box"
+      links={[RELATED.avifToPng, RELATED.avifToJpg, RELATED.whatIsAvif]}
+    />
+  </article>
+</Base>

@@ -1,4 +1,5 @@
 import { BATCH_FAQ, LIMITS, LIMITS_AND_PRIVACY, PRIVACY_FAQ, RELATED } from '../site';
+import { cite } from '../sources';
 import type { ToolPage } from '../types';
 
 export const avifToJpg: ToolPage = {
@@ -40,7 +41,7 @@ export const avifToJpg: ToolPage = {
       ['Transparency', 'Yes', 'No'],
       ['HDR', 'Yes', 'No'],
       ['Animation', 'Yes', 'No'],
-      ['Browser support', 'About 95% of browsers in use', 'All'],
+      ['Browser support', 'Over 95% of browsers in use', 'All'],
       ['Apps, printers, upload forms', 'Recent software only', 'Everything'],
       ['Best for', 'Delivering images on the web', 'Sharing, printing, compatibility'],
     ],
@@ -66,7 +67,7 @@ export const avifToJpg: ToolPage = {
       id: 'animated',
       title: 'Animated AVIF becomes frames',
       body: [
-        'A JPG cannot move, so an animated AVIF is exported as one JPG per frame, numbered in order, with thumbnails to pick from. To keep the motion in a single file, choose Animated PNG on the <a href="/avif-to-png">PNG converter</a>. Frame access works in Chrome, Edge and Firefox; Safari only exposes the first frame.',
+        `A JPG cannot move, so an animated AVIF is exported as one JPG per frame, numbered in order, with thumbnails to pick from. To keep the motion in a single file, choose Animated PNG on the <a href="/avif-to-png">PNG converter</a>. ${cite('imageDecoder', 'Frame access')} works in Chrome, Edge and Firefox; Safari only exposes the first frame.`,
       ],
     },
     {

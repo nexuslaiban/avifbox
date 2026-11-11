@@ -1,4 +1,5 @@
-// Renders public/og.png (1200x630), the image shown when a page is shared. Run when the brand changes.
+// Renders public/og.png (1200x630), the image shown when a page is shared, and public/logo.png
+// (512x512), the logo named in the Organization data. Run when the brand changes.
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
@@ -42,5 +43,12 @@ const page = await browser.newPage({ viewport: { width: 1200, height: 630 } });
 await page.setContent(html);
 await page.evaluate(() => document.fonts.ready);
 await page.screenshot({ path: join(root, 'public', 'og.png') });
+
+// The logo is the favicon, at a size search engines accept (112 px is their minimum).
+const favicon = readFileSync(join(root, 'public', 'favicon.svg'), 'utf8');
+await page.setViewportSize({ width: 512, height: 512 });
+await page.setContent(`<style>html,body{margin:0}svg{display:block;width:512px;height:512px}</style>${favicon}`);
+await page.screenshot({ path: join(root, 'public', 'logo.png') });
+
 await browser.close();
-console.log('wrote public/og.png');
+console.log('wrote public/og.png and public/logo.png');

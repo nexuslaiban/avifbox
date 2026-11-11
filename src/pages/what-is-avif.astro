@@ -3,10 +3,13 @@ import Base from '../layouts/Base.astro';
 import Faq from '../components/Faq.astro';
 import Cards from '../components/Cards.astro';
 import { RELATED } from '../content/site';
+import { GUIDE_DATES, longDate } from '../content/dates';
 import { articleSchema, faqSchema } from '../content/schema';
+import { SOURCES } from '../content/sources';
 import type { Faq as FaqEntry } from '../content/types';
 
 const path = '/what-is-avif';
+const dates = GUIDE_DATES[path];
 const title = 'What Is AVIF? The Image Format Explained | AVIFBox';
 const description =
   'AVIF is a modern image format built on the AV1 video codec. What it is, what it can do, how it compares with JPG, PNG and WebP, and how to open or convert it.';
@@ -65,10 +68,7 @@ const faq: FaqEntry[] = [
   },
 ];
 
-const jsonLd = [
-  articleSchema({ path, headline: 'What is AVIF?', description, published: '2026-11-11' }),
-  faqSchema(faq),
-];
+const jsonLd = [articleSchema({ path, headline: 'What is AVIF?', description, ...dates }), faqSchema(faq)];
 ---
 
 <Base title={title} description={description} path={path} jsonLd={jsonLd}>
@@ -92,6 +92,9 @@ const jsonLd = [
         AVIF is an image format that makes pictures much smaller than JPG or PNG without making them look worse. It is
         why some images you save from the web end in <code>.avif</code> — and why some programs refuse to open them.
       </p>
+      <p class="dateline">
+        Updated <time datetime={dates.updated}>{longDate(dates.updated)}</time>
+      </p>
     </div>
   </section>
 
@@ -109,8 +112,9 @@ const jsonLd = [
             compressed video frame.
           </p>
           <p>
-            The format was published in 2019 by the Alliance for Open Media, whose members include Google, Apple,
-            Microsoft, Mozilla, Netflix and Amazon. It is royalty-free, which is why browsers adopted it quickly.
+            The format was <a href={SOURCES.avifSpec}>published in February 2019</a> by the{' '}
+            <a href={SOURCES.aom}>Alliance for Open Media</a>, whose members include Google, Apple, Microsoft, Mozilla,
+            Netflix and Amazon. It is royalty-free, which is why browsers adopted it quickly.
           </p>
           <p>
             Websites use AVIF because it saves bandwidth: at the same visual quality an AVIF is roughly half the size of
@@ -179,16 +183,20 @@ const jsonLd = [
         </div>
         <div class="prose">
           <p>
-            <strong>Browsers.</strong> Chrome has read AVIF since version 85 (2020), Firefox since 93 (2021), Safari
-            since 16 (2022) and Edge since 121 (2024). Together that is about 95% of browsers in use.
+            <strong>Browsers.</strong> Chrome has read AVIF since version 85 (2020), Firefox since 93 (2021),{' '}
+            <a href={SOURCES.safari16}>Safari since 16</a> (2022) and Edge since 121 (2024). Together that is{' '}
+            <a href={SOURCES.caniuseAvif}>over 95% of browsers in use</a>.
           </p>
           <p>
-            <strong>Operating systems.</strong> macOS 13, iOS 16 and Android 12 and later open AVIF in their built-in
-            apps. Windows 10 and 11 need the free AV1 Video Extension from the Microsoft Store.
+            <strong>Operating systems.</strong> macOS 13, iOS 16 and <a href={SOURCES.android12}>Android 12</a> and
+            later open AVIF in their built-in apps. Windows 10 and 11 need the free{' '}
+            <a href={SOURCES.av1Extension}>AV1 Video Extension</a> from the Microsoft Store.
           </p>
           <p>
-            <strong>Software.</strong> Photoshop reads AVIF from version 23.2 and GIMP from 2.10.22. Older editors,
-            office suites, email clients and many upload forms still reject it.
+            <strong>Software.</strong> Photoshop reads AVIF from{' '}
+            <a href={SOURCES.photoshop}>version 26.8, released in June 2025</a>, and GIMP from{' '}
+            <a href={SOURCES.gimp}>version 2.10.22</a>. Older editors, office suites, email clients and many upload
+            forms still reject it.
           </p>
           <p>
             The practical steps for each system are in <a href="/how-to-open-avif-file">how to open an AVIF file</a>.

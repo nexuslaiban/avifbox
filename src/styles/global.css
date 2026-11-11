@@ -1,5 +1,26 @@
 /* AVIFBox — packing-crate look: kraft paper, stencil type, rubber stamps, packing-slip tables. */
 
+/* Stand-ins for the display font until it has loaded. A system sans is far wider than Big Shoulders,
+   so headings used to wrap onto extra lines and the page jumped when the real font arrived. Scaled
+   to the width of the display font, the lines break in the same places. The factor is the measured
+   ratio for the home page heading, which sits closest to its wrap limit; the other headings are
+   within 2% of it. The bold faces are named outright: the display font is only used at 700 and
+   heavier, and a synthesised bold is not the same width on every platform. */
+@font-face {
+  font-family: 'Big Shoulders Fallback';
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold');
+  font-weight: 100 900;
+  size-adjust: 69%;
+}
+
+/* Android has no Arial; its system sans is narrower and needs its own factor. */
+@font-face {
+  font-family: 'Big Shoulders Fallback Roboto';
+  src: local('Roboto Bold'), local('Roboto-Bold'), local('Roboto');
+  font-weight: 100 900;
+  size-adjust: 75%;
+}
+
 :root {
   color-scheme: light dark;
   --paper: #f3ead8;
@@ -14,8 +35,10 @@
   --ok: #17694a;
   --focus: #1746d1;
   --shadow: 4px 4px 0 var(--ink);
-  --font-display: 'Big Shoulders Display Variable', 'Arial Narrow', 'Helvetica Neue Condensed', sans-serif;
-  --font-body: 'Atkinson Hyperlegible Next Variable', system-ui, sans-serif;
+  --font-display:
+    'Big Shoulders Display Variable', 'Big Shoulders Fallback', 'Big Shoulders Fallback Roboto', sans-serif;
+  /* Arial and Roboto are within 2% of the body font's width; system-ui can be anything. */
+  --font-body: 'Atkinson Hyperlegible Next Variable', Arial, 'Liberation Sans', Roboto, system-ui, sans-serif;
   --font-mono: 'Atkinson Hyperlegible Mono Variable', ui-monospace, 'SF Mono', monospace;
   --wrap: 72rem;
   --measure: 44rem;
@@ -281,7 +304,7 @@ img {
 
 .site-footer .wrap {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr;
+  grid-template-columns: 1.4fr repeat(3, 1fr);
   gap: 2rem;
   padding-block: 2.5rem 2rem;
 }
@@ -428,7 +451,9 @@ img {
   font-weight: 900;
   line-height: 0.84;
   letter-spacing: -0.005em;
-  max-width: 12ch;
+  /* Twelve digits wide in the display font. In em rather than ch, because ch follows whichever font
+     is showing: the cap itself changed width when the web font replaced the fallback. */
+  max-width: 6.1em;
 }
 
 .band h1 em {
@@ -442,6 +467,13 @@ img {
   line-height: 1.5;
   max-width: 40rem;
   margin-top: 1.1rem;
+}
+
+.dateline {
+  font: 0.8rem/1.2 var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 0.9rem;
 }
 
 .hero-top {

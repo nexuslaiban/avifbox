@@ -17,6 +17,11 @@ interface Props {
 const { title, description, path, jsonLd = [], noindex = false } = Astro.props;
 const canonical = new URL(path, SITE.url).href;
 const current = (href: string) => (href === path ? 'page' : undefined);
+const footerGroups = [
+  ['Converters', NAV.converters],
+  ['Guides', NAV.guides],
+  ['About', NAV.about],
+] as const;
 ---
 
 <!doctype html>
@@ -91,26 +96,18 @@ const current = (href: string) => (href === path ? 'page' : undefined);
           <h2>{SITE.name}</h2>
           <p>{SITE.tagline}. Your files are converted on your own device and are never uploaded.</p>
         </div>
-        <nav aria-label="Converters">
-          <h2>Converters</h2>
-          <ul>
-            {NAV.converters.map((link) => (
-              <li>
-                <a href={link.href}>{link.label}</a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        <nav aria-label="Guides">
-          <h2>Guides</h2>
-          <ul>
-            {NAV.guides.map((link) => (
-              <li>
-                <a href={link.href}>{link.label}</a>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        {footerGroups.map(([heading, links]) => (
+          <nav aria-label={heading}>
+            <h2>{heading}</h2>
+            <ul>
+              {links.map((link) => (
+                <li>
+                  <a href={link.href}>{link.label}</a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ))}
         <p class="fine">
           No cookies, no tracking, no ads. AVIF decoding for HDR images uses libavif, © Alliance for Open Media and
           jSquash contributors.

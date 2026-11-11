@@ -134,3 +134,5 @@ Each criterion maps 1:1 to a test. `E` = Playwright against the built site, `U` 
 - 2026-11-11 — AC-15: dropped dimensions and alpha from `probe`; nothing needs them before decoding.
   AC-20: dropped the per-animation ZIP folder; frame names already carry the source name, and a flat
   archive is simpler to use. AC-05: animated WebP added. Conversion tests also run in Firefox.
+- 2026-11-11 — AC-21: "the 8 routes" is superseded by `2026-11-11-seo-geo-round-1.md`, which adds
+  `/about` and `/privacy`: 10 routes, 10 sitemap URLs.

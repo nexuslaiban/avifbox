@@ -1,4 +1,5 @@
 import { LIMITS, LIMITS_AND_PRIVACY, PRIVACY_FAQ, RELATED } from '../site';
+import { cite } from '../sources';
 import type { ToolPage } from '../types';
 
 export const jfifToJpg: ToolPage = {
@@ -52,7 +53,7 @@ export const jfifToJpg: ToolPage = {
       id: 'what',
       title: 'What a JFIF file is',
       body: [
-        'JFIF stands for JPEG File Interchange Format, the 1992 specification for how JPEG-compressed data is laid out in a file. Nearly every .jpg you have opened is a JFIF file on the inside, or its cousin Exif, which cameras use. The .jfif extension just says so out loud: the picture, its quality and its compression are plain JPEG.',
+        `JFIF stands for ${cite('jfif', 'JPEG File Interchange Format')}, the 1992 specification for how JPEG-compressed data is laid out in a file. Nearly every .jpg you have opened is a JFIF file on the inside, or its cousin Exif, which cameras use. The .jfif extension just says so out loud: the picture, its quality and its compression are plain JPEG.`,
       ],
     },
     {

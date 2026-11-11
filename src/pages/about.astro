@@ -1,0 +1,149 @@
+---
+import Base from '../layouts/Base.astro';
+import Cards from '../components/Cards.astro';
+import { RELATED, SITE } from '../content/site';
+import { ORGANIZATION } from '../content/schema';
+import { SOURCES } from '../content/sources';
+
+const title = 'About AVIFBox — What It Is and How It Works';
+const description =
+  'AVIFBox is an independent, free set of image converters that run in your browser. What it is, how it works, where its facts come from and how to get in touch.';
+---
+
+<Base title={title} description={description} path="/about" jsonLd={[ORGANIZATION]}>
+  <section class="band">
+    <div class="wrap reveal">
+      <p class="label">
+        <span>
+          <small>Document</small>
+          <strong>About</strong>
+        </span>
+        <span>
+          <small>Subject</small>
+          <strong>{SITE.name}</strong>
+        </span>
+        <span class="barcode" aria-hidden="true"></span>
+      </p>
+      <h1>
+        About <em>AVIFBox</em>
+      </h1>
+      <p class="lede">
+        AVIFBox is a small, independent set of image converters that run in your web browser. It has one job: turning
+        AVIF, JFIF and WebP files into PNG or JPG without sending them anywhere.
+      </p>
+    </div>
+  </section>
+
+  <article class="doc wrap">
+    <section class="split">
+      <section id="what">
+        <div class="sec-head">
+          <span class="sec-no">№ 01</span>
+          <h2>What it is</h2>
+        </div>
+        <div class="prose">
+          <p>
+            AVIFBox converts AVIF, JFIF and WebP images to PNG or JPG — <a href="/avif-to-png">AVIF to PNG</a> and{' '}
+            <a href="/avif-to-jpg">AVIF to JPG</a> among them — and explains the format in two guides,{' '}
+            <a href="/what-is-avif">What is AVIF?</a> and <a href="/how-to-open-avif-file">how to open an AVIF file</a>.
+          </p>
+          <p>
+            It is an independent project. It is not affiliated with the{' '}
+            <a href={SOURCES.aom}>Alliance for Open Media</a>, which develops AVIF, or with any browser or software
+            maker.
+          </p>
+          <p>
+            It is free: no account, no watermark, no quota and no paid tier. It carries no ads and does not track its
+            visitors.
+          </p>
+        </div>
+      </section>
+
+      <section id="how">
+        <div class="sec-head">
+          <span class="sec-no">№ 02</span>
+          <h2>How it works</h2>
+        </div>
+        <div class="prose">
+          <p>
+            The converting is done by your own browser. Once a page has loaded, each image is decoded and encoded again
+            on your device. Nothing is uploaded: the site is a set of static files, with no server-side code that could
+            receive an image.
+          </p>
+          <p>
+            Where your browser can read a file itself, its own decoder is used. HDR images, and AVIF in a browser that
+            cannot read the format, go through <a href={SOURCES.libavif}>libavif</a> — the Alliance for Open Media’s
+            AVIF library — compiled to WebAssembly by the <a href={SOURCES.jsquash}>jSquash</a> project. PNG and
+            animated PNG files are written by AVIFBox’s own encoder; JPG comes from the browser’s.
+          </p>
+          <p>
+            You need not take this on trust. Each page’s security policy only lets it talk to avifbox.com, and your
+            browser’s network panel will show that converting sends nothing. The <a href="/privacy">privacy policy</a>{' '}
+            sets out what the site and its host can and cannot see.
+          </p>
+        </div>
+      </section>
+    </section>
+
+    <section class="split">
+      <section id="sources">
+        <div class="sec-head">
+          <span class="sec-no">№ 03</span>
+          <h2>Where the facts come from</h2>
+        </div>
+        <div class="prose">
+          <p>
+            The guides and the converter pages link to primary sources — the format’s specification, vendors’ release
+            notes, browser support data — so that a claim can be checked rather than believed. Each guide shows the date
+            it was last updated.
+          </p>
+          <p>Corrections are welcome: if something here is wrong or out of date, write to the address below.</p>
+        </div>
+      </section>
+
+      <section id="credits">
+        <div class="sec-head">
+          <span class="sec-no">№ 04</span>
+          <h2>Credits</h2>
+        </div>
+        <div class="prose">
+          <ul>
+            <li>
+              AVIF decoding for HDR images: <a href={SOURCES.libavif}>libavif</a>, © Alliance for Open Media, through{' '}
+              <a href={SOURCES.jsquash}>jSquash</a> (Apache-2.0).
+            </li>
+            <li>
+              Typefaces: Big Shoulders Display, Atkinson Hyperlegible Next and Atkinson Hyperlegible Mono, under the SIL
+              Open Font License.
+            </li>
+            <li>Sample photograph: “Earthrise”, NASA / Bill Anders, 1968, public domain.</li>
+          </ul>
+        </div>
+      </section>
+    </section>
+
+    <section id="contact">
+      <div class="sec-head">
+        <span class="sec-no">№ 05</span>
+        <h2>Contact</h2>
+      </div>
+      <div class="prose">
+        <p>
+          Write to <a href={`mailto:${SITE.email}`}>{SITE.email}</a> about a file that will not convert, a mistake in a
+          guide, or anything else about the site.
+        </p>
+        <p>
+          For a file that fails, the error message and the name of your browser are usually enough. Send the image
+          itself only if you are happy to share it.
+        </p>
+      </div>
+    </section>
+
+    <Cards
+      id="related"
+      number="№ 06"
+      title="More from the box"
+      links={[RELATED.avifToPng, RELATED.avifToJpg, RELATED.whatIsAvif]}
+    />
+  </article>
+</Base>

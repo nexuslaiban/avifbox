@@ -1,4 +1,5 @@
 import { LIMITS, LIMITS_AND_PRIVACY, PRIVACY_FAQ, RELATED } from '../site';
+import { cite } from '../sources';
 import type { ToolPage } from '../types';
 
 export const webpToPng: ToolPage = {
@@ -48,7 +49,7 @@ export const webpToPng: ToolPage = {
       id: 'why',
       title: 'Why you keep ending up with WebP',
       body: [
-        'Websites serve WebP because it loads faster than PNG or JPG, so that is what “Save image as” hands you. Browsers have read WebP for years, but older editors, office suites, chat apps and upload forms still reject it. PNG is the safe way out: lossless, transparent and understood by everything.',
+        `Websites serve ${cite('webp', 'WebP')} because it loads faster than PNG or JPG, so that is what “Save image as” hands you. Browsers have read WebP for years, but older editors, office suites, chat apps and upload forms still reject it. PNG is the safe way out: lossless, transparent and understood by everything.`,
       ],
     },
     {
@@ -76,7 +77,7 @@ export const webpToPng: ToolPage = {
       id: 'animated',
       title: 'Animated WebP',
       body: [
-        'Animated WebP files are decoded frame by frame. Keep each frame as its own numbered PNG and untick the ones you do not need, or choose <strong>Animated PNG</strong> for a single file that still plays. Frame access works in Chrome, Edge and Firefox; in Safari, which does not expose frames to web pages, the first frame is converted.',
+        `Animated WebP files are decoded frame by frame. Keep each frame as its own numbered PNG and untick the ones you do not need, or choose <strong>Animated PNG</strong> for a single file that still plays. ${cite('imageDecoder', 'Frame access')} works in Chrome, Edge and Firefox; in Safari, which does not expose frames to web pages, the first frame is converted.`,
       ],
     },
     {

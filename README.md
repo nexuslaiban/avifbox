@@ -13,6 +13,7 @@ plain static bundle with no backend.
 | `/jfif-to-jpg`, `/jfif-to-png`            | JFIF to JPG is a lossless rename by default |
 | `/webp-to-png`                            | WebP, including animated                    |
 | `/what-is-avif`, `/how-to-open-avif-file` | Guides; the second embeds a viewer          |
+| `/about`, `/privacy`                      | What the site is, and what it can see       |
 
 - Batches of 50 files, 50 MB each, downloadable as one ZIP
 - Animated input: one file per frame with a frame picker, or a single animated PNG
@@ -40,7 +41,7 @@ src/content/   page copy and site constants
 src/pages/     Astro routes
 tests/unit/    engine and store tests (Node)
 tests/e2e/     conversion, site structure and accessibility tests (real browsers)
-scripts/       fixture, sample and share-image generators
+scripts/       fixture, sample, share-image and logo generators
 docs/specs/    the specification the tests are written against
 ```
 

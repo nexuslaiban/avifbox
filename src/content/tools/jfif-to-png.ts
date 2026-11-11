@@ -1,4 +1,5 @@
 import { BATCH_FAQ, LIMITS, LIMITS_AND_PRIVACY, PRIVACY_FAQ, RELATED } from '../site';
+import { cite } from '../sources';
 import type { ToolPage } from '../types';
 
 export const jfifToPng: ToolPage = {
@@ -48,7 +49,7 @@ export const jfifToPng: ToolPage = {
       id: 'what',
       title: 'JFIF is JPEG',
       body: [
-        'A .jfif file is a JPEG image under a less common extension; JFIF is simply the name of the JPEG file layout. Windows sometimes uses it when you save a picture from a web page.',
+        `A .jfif file is a JPEG image under a less common extension; ${cite('jfif', 'JFIF')} is simply the name of the JPEG file layout. Windows sometimes uses it when you save a picture from a web page.`,
         'If all you need is a file ending in .jpg, do not convert to PNG at all: <a href="/jfif-to-jpg">JFIF to JPG</a> changes the name without touching the picture, so nothing is lost and the file stays small.',
       ],
     },

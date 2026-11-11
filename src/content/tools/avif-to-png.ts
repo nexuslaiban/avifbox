@@ -1,4 +1,5 @@
 import { BATCH_FAQ, LIMITS, LIMITS_AND_PRIVACY, PRIVACY_FAQ, RELATED } from '../site';
+import { cite } from '../sources';
 import type { ToolPage } from '../types';
 
 export const avifToPng: ToolPage = {
@@ -41,7 +42,7 @@ export const avifToPng: ToolPage = {
       ['HDR', 'Yes — PQ and HLG', 'Only since the 2025 revision; rarely read'],
       ['Wide colour gamut', 'Yes', 'Yes, with an embedded profile'],
       ['Animation', 'Yes, image sequences', 'Yes, as APNG'],
-      ['Browser support', 'About 95% of browsers in use', 'Effectively all'],
+      ['Browser support', 'Over 95% of browsers in use', 'Effectively all'],
       ['Repeated editing', 'Loses quality on each lossy save', 'No generation loss'],
       ['Best for', 'Delivering images on the web', 'Editing, screenshots, graphics'],
     ],
@@ -69,7 +70,7 @@ export const avifToPng: ToolPage = {
       title: 'Animated AVIF: pick frames, or keep it moving',
       body: [
         'Many converters keep the first frame of an animated AVIF and quietly drop the rest. Here every frame becomes its own numbered PNG, with thumbnails so you can untick the ones you do not want.',
-        'Prefer one file? <strong>Animated PNG</strong> gives a single .png (APNG) that keeps the motion and timing and plays in every current browser. Frame access works in Chrome, Edge and Firefox; in Safari only the first frame is converted.',
+        `Prefer one file? <strong>Animated PNG</strong> gives a single .png (APNG) that keeps the motion and timing and plays in every current browser. ${cite('imageDecoder', 'Frame access')} works in Chrome, Edge and Firefox; in Safari only the first frame is converted.`,
       ],
     },
     {
@@ -78,7 +79,7 @@ export const avifToPng: ToolPage = {
       body: [
         'PNGs from this tool are 8-bit SDR, the kind every program reads. An HDR AVIF (PQ or HLG) has to be squeezed to fit, and the converter does that deliberately:',
         '<ul><li><strong>Keep brightness</strong> — highlights stay as bright as SDR allows and fade toward white, like a camera JPG.</li><li><strong>Keep colour</strong> — highlights keep their hue and come out darker.</li></ul>',
-        '<strong>Display P3</strong> keeps wide-gamut colour by embedding the profile. Lost either way: brightness above SDR white, and 10- and 12-bit precision, which is rounded to 8 bits. If you need those, decode to 16-bit TIFF or PNG with a desktop tool such as <code>avifdec</code>.',
+        `<strong>Display P3</strong> keeps wide-gamut colour by embedding the profile. Lost either way: brightness above SDR white, and 10- and 12-bit precision, which is rounded to 8 bits. If you need those, decode to 16-bit TIFF or PNG with a desktop tool such as ${cite('libavif', '<code>avifdec</code>')}.`,
       ],
     },
     {

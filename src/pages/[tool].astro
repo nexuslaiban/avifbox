@@ -4,7 +4,7 @@ import Converter from '../ui/Converter';
 import Samples from '../components/Samples.astro';
 import Faq from '../components/Faq.astro';
 import Cards from '../components/Cards.astro';
-import { faqSchema, plain } from '../content/schema';
+import { appSchema, faqSchema, plain } from '../content/schema';
 import { tools } from '../content/tools';
 import { LIMITS, SITE, STAMPS } from '../content/site';
 import { SAMPLE_BUTTONS } from '../content/samples';
@@ -33,18 +33,12 @@ const facts: [string, string][] = [
 ];
 
 const jsonLd = [
-  {
-    '@context': 'https://schema.org',
-    '@type': 'SoftwareApplication',
+  appSchema({
     name,
-    url: `${SITE.url}${path}`,
+    path,
     description: tool.description,
-    applicationCategory: 'MultimediaApplication',
-    operatingSystem: 'Any — runs in the web browser',
-    browserRequirements: 'Requires JavaScript and a current version of Chrome, Edge, Firefox or Safari',
-    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-    featureList: facts.map(([label, value]) => `${label}: ${value}`),
-  },
+    features: facts.map(([label, value]) => `${label}: ${value}`),
+  }),
   faqSchema(tool.faq),
 ];
 

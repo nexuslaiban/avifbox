@@ -2,14 +2,19 @@
 import Base from '../layouts/Base.astro';
 import Converter from '../ui/Converter';
 import { tools } from '../content/tools';
-import { NAV, RELATED, SITE, STAMPS } from '../content/site';
+import { BATCH_FAQ, LIMITS, NAV, PRIVACY_FAQ, RELATED, SITE, STAMPS } from '../content/site';
 import { SAMPLE_BUTTONS } from '../content/samples';
+import { ORGANIZATION, appSchema, faqSchema } from '../content/schema';
 import Cards from '../components/Cards.astro';
+import Faq from '../components/Faq.astro';
+import type { Faq as FaqEntry, Step } from '../content/types';
 
-const title = 'AVIFBox — AVIF Converter That Runs in Your Browser';
+const title = 'AVIF Converter — AVIF to PNG or JPG, Free, No Upload | AVIFBox';
 const description =
   'Free AVIF converter: turn AVIF, JFIF and WebP images into PNG or JPG in your browser. Batch 50 files, animated and HDR support, nothing uploaded.';
 const accept = '.avif,.jfif,.jfi,.jif,.jpg,.jpeg,.webp,.png,image/avif,image/jpeg,image/webp,image/png';
+
+const label = (slug: string) => NAV.converters.find((link) => link.href === `/${slug}`)?.label;
 
 const blurbs: Record<string, string> = {
   'avif-to-png': 'Lossless PNG with transparency. Animated AVIF frame by frame, HDR tone-mapped.',
@@ -19,10 +24,34 @@ const blurbs: Record<string, string> = {
   'webp-to-png': 'WebP to PNG with transparency kept; animated WebP split into frames.',
 };
 
+/** What survives each conversion: quality, transparency, animation. */
+const keeps: Record<string, [string, string, string]> = {
+  'avif-to-png': ['Lossless', 'Kept', 'Every frame, or one animated PNG'],
+  'avif-to-jpg': ['Lossy, quality 1–100', 'Filled with a colour you choose', 'One JPG per frame'],
+  'jfif-to-jpg': ['Identical: a rename', 'JPEG has none', 'JPEG has none'],
+  'jfif-to-png': ['Lossless', 'JPEG has none', 'JPEG has none'],
+  'webp-to-png': ['Lossless', 'Kept', 'Every frame, or one animated PNG'],
+};
+
+const steps: Step[] = [
+  {
+    title: 'Add your images',
+    body: `Drop AVIF, JFIF or WebP files on the box, press <strong>Choose files</strong>, or paste with Ctrl+V — up to ${LIMITS}. Conversion starts immediately.`,
+  },
+  {
+    title: 'Choose PNG or JPG',
+    body: 'PNG keeps every pixel and any transparency. JPG is far smaller and opens in everything. Switch whenever you like: the results and their sizes update as you go.',
+  },
+  {
+    title: 'Download',
+    body: 'Save each image, or take the whole batch as one ZIP.',
+  },
+];
+
 const features = [
   {
     title: 'Converted on your device',
-    body: 'Your browser decodes and encodes the images. Nothing is uploaded, so there is no queue, no server copy and no privacy policy to worry about.',
+    body: 'Your browser decodes and encodes the images. Nothing is uploaded, so there is no queue and no copy of your image on a server.',
   },
   {
     title: 'Animated AVIF, frame by frame',
@@ -38,7 +67,47 @@ const features = [
   },
 ];
 
+const faq: FaqEntry[] = [
+  {
+    question: 'What is an AVIF converter?',
+    answer:
+      'A tool that saves an AVIF image again in an older format such as PNG or JPG, so that software which cannot read AVIF can open it. This one runs in your browser: the image is converted on your own device.',
+  },
+  {
+    question: 'How do I convert an AVIF file to JPG or PNG?',
+    answer:
+      'Drop the file on the box at the top of this page, choose PNG or JPG, and download the result. There is nothing to install and no account to create.',
+  },
+  {
+    question: 'Should I convert AVIF to PNG or to JPG?',
+    answer:
+      'PNG for graphics, screenshots, transparency and anything you will edit: it is lossless. JPG for photos you only view or share: the file is far smaller. <a href="/avif-to-png">AVIF to PNG</a> and <a href="/avif-to-jpg">AVIF to JPG</a> go into the details.',
+  },
+  {
+    question: 'Is this AVIF converter free?',
+    answer: 'Yes — free, with no sign-up, no watermark and no daily limit.',
+  },
+  PRIVACY_FAQ,
+  BATCH_FAQ,
+  {
+    question: 'Does it work on a phone?',
+    answer:
+      'Yes. It runs in the browser on Android, iPhone and iPad just as it does on a computer. A very large image is limited only by the phone’s memory.',
+  },
+  {
+    question: 'Can it convert animated or HDR AVIF?',
+    answer:
+      'Yes. Every frame of an animated AVIF can be saved as its own image or as one animated PNG, and an HDR AVIF is tone-mapped to SDR, keeping either its brightness or its colour. In Safari only the first frame of an animation is converted.',
+  },
+  {
+    question: 'What is an AVIF file?',
+    answer:
+      'An image compressed with the AV1 video codec, typically about half the size of a JPG that looks the same. <a href="/what-is-avif">What is AVIF?</a> explains the format, and <a href="/how-to-open-avif-file">how to open an AVIF file</a> covers the programs that read it.',
+  },
+];
+
 const jsonLd = [
+  ORGANIZATION,
   {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
@@ -46,6 +115,13 @@ const jsonLd = [
     url: SITE.url,
     description,
   },
+  appSchema({
+    name: `${SITE.name} AVIF Converter`,
+    path: '/',
+    description,
+    features: features.map((feature) => feature.title),
+  }),
+  faqSchema(faq),
 ];
 ---
 
@@ -119,7 +195,7 @@ const jsonLd = [
               <small>
                 {tool.from} → {tool.to}
               </small>
-              <strong>{NAV.converters.find((link) => link.href === `/${tool.slug}`)?.label}</strong>
+              <strong>{label(tool.slug)}</strong>
               <span>{blurbs[tool.slug]}</span>
             </a>
           </li>
@@ -127,9 +203,24 @@ const jsonLd = [
       </ul>
     </section>
 
-    <section id="why">
+    <section id="how-to">
       <div class="sec-head">
         <span class="sec-no">№ 02</span>
+        <h2>How to convert an AVIF file</h2>
+      </div>
+      <ol class="steps">
+        {steps.map((step) => (
+          <li>
+            <h3>{step.title}</h3>
+            <p set:html={step.body} />
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section id="why">
+      <div class="sec-head">
+        <span class="sec-no">№ 03</span>
         <h2>What is in the box</h2>
       </div>
       <ol class="steps">
@@ -142,6 +233,40 @@ const jsonLd = [
       </ol>
     </section>
 
-    <Cards id="guides" number="№ 03" title="New to AVIF?" links={[RELATED.whatIsAvif, RELATED.openAvif]} />
+    <section id="formats">
+      <div class="sec-head">
+        <span class="sec-no">№ 04</span>
+        <h2>What each conversion keeps</h2>
+      </div>
+      <div class="slip" tabindex="0" role="region" aria-label="What each conversion keeps">
+        <table>
+          <caption>Quality, transparency and animation, conversion by conversion</caption>
+          <thead>
+            <tr>
+              <td></td>
+              <th scope="col">Quality</th>
+              <th scope="col">Transparency</th>
+              <th scope="col">Animation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {tools.map((tool) => (
+              <tr>
+                <th scope="row">
+                  <a href={`/${tool.slug}`}>{label(tool.slug)}</a>
+                </th>
+                {keeps[tool.slug].map((cell) => (
+                  <td>{cell}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <Faq number="№ 05" entries={faq} />
+
+    <Cards id="guides" number="№ 06" title="New to AVIF?" links={[RELATED.whatIsAvif, RELATED.openAvif]} />
   </article>
 </Base>
