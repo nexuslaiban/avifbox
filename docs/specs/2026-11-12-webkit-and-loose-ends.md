@@ -91,3 +91,10 @@ Out of scope: `→ AVIF` pages, GIF and WebP export, localisation, `llms.txt`, a
 TOUCHPOINT 1 — approved by the owner on 2026-11-12, all five parts. Each part is committed to `main`
 once its tests are green; nothing is deployed without a separate go. The owner installed the two
 system packages the same day. No git remote for now, by the owner's choice.
+
+## Observed
+
+- 2026-11-12, AC-43, AC-42: `wrangler dev` — the host's runtime, run locally — serving `dist/`. `/`
+  answers with `Strict-Transport-Security: max-age=31536000` next to the headers it had;
+  `/favicon.ico` is `image/vnd.microsoft.icon` and `/apple-touch-icon.png` is `image/png`. The check on
+  `https://avifbox.com/` waits for the deploy.

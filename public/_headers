@@ -1,7 +1,11 @@
 # Response headers for static hosts that read this file (Cloudflare Workers and Pages, Netlify).
 # Pages carry their own Content-Security-Policy in a <meta> tag, generated at build time.
 
+# Files stay on the visitor's device only as long as the script arrives untouched, so a browser that
+# knows the site must not ask for it over plain HTTP. This host only, and not preloaded: a later
+# subdomain is not bound by it, and it can be taken back with max-age=0.
 /*
+  Strict-Transport-Security: max-age=31536000
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
