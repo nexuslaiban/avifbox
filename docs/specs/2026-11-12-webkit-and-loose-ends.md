@@ -105,3 +105,10 @@ system packages the same day. No git remote for now, by the owner's choice.
   answers with `Strict-Transport-Security: max-age=31536000` next to the headers it had;
   `/favicon.ico` is `image/vnd.microsoft.icon` and `/apple-touch-icon.png` is `image/png`. The check on
   `https://avifbox.com/` waits for the deploy.
+- 2026-11-13, AC-43, AC-42, AC-44: deployed from commit `e85a3d9` as Cloudflare version
+  `b2b293c7-2c91-41d4-8ead-fe1b3f698f84`, then read back with curl and a browser User-Agent.
+  `https://avifbox.com/` answers with `Strict-Transport-Security: max-age=31536000`, once; so do
+  `/favicon.ico` and the worker script under `/_astro/`, which keeps its own Content-Security-Policy.
+  `http://avifbox.com/` still answers 301 to HTTPS. `/favicon.ico` (`image/vnd.microsoft.icon`) and
+  `/apple-touch-icon.png` (`image/png`) are the files of the build, byte for byte. So are all 14
+  pages, the 404 page among them: the edge adds nothing to them.
