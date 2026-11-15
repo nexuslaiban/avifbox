@@ -4,8 +4,12 @@
 # Files stay on the visitor's device only as long as the script arrives untouched, so a browser that
 # knows the site must not ask for it over plain HTTP. This host only, and not preloaded: a later
 # subdomain is not bound by it, and it can be taken back with max-age=0.
+#
+# The pages' own policy is a <meta> tag, where frame-ancestors is ignored, so this header is what keeps
+# another site from showing the converter in a frame as its own. The site frames nothing itself.
 /*
   Strict-Transport-Security: max-age=31536000
+  X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()

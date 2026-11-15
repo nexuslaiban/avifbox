@@ -10,6 +10,10 @@ describe('response headers', () => {
     expect(hostHeaders()['/*']['Strict-Transport-Security']).toBe('max-age=31536000');
   });
 
+  it('AC-48 no page may be shown in a frame, on any site', () => {
+    expect(hostHeaders()['/*']['X-Frame-Options']).toBe('DENY');
+  });
+
   it('reads the file as the host does: the rules that were there are still found', () => {
     const rules = hostHeaders();
     expect(rules['/*']['X-Content-Type-Options']).toBe('nosniff');
