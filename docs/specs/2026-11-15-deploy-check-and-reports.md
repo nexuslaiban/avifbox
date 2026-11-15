@@ -99,6 +99,9 @@ offline use, dependency updates.
   The file name stays out: a name is private more often than an error message is.
 - **One link for the page, not one per failed file**, with the address in its text: a visitor whose
   browser has no mail program set up can still copy it.
+- **The site's name and address moved to `src/content/identity.ts`** (added while building part 3).
+  The link needs the address in the browser. Importing it from `site.ts` carried the navigation and
+  other page copy into the script; from a file of its own, the link costs 803 bytes of script.
 
 ## Approval
 

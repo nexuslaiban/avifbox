@@ -1,12 +1,7 @@
 import { MAX_FILES, MAX_FILE_BYTES } from '../engine/limits';
 import type { Faq, Related, Section } from './types';
 
-export const SITE = {
-  name: 'AVIFBox',
-  url: 'https://avifbox.com',
-  tagline: 'Image converters that run in your browser',
-  email: 'hello@avifbox.com',
-} as const;
+export { SITE } from './identity';
 
 export const LIMITS = `${MAX_FILES} files per batch, ${MAX_FILE_BYTES / (1024 * 1024)} MB each`;
 

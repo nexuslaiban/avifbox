@@ -436,6 +436,12 @@
   border-bottom: 0;
 }
 
+/* Under the list, in line with its rows: how to report a file that failed. */
+.cv-results > .cv-report {
+  padding: 0.75rem 1rem;
+  border-top: 1px dashed var(--rule-soft);
+}
+
 .cv-thumb {
   width: 4rem;
   height: 4rem;

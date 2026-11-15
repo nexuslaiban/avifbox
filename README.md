@@ -44,7 +44,7 @@ src/ui/        Preact converter and viewer, plus the state store
 src/content/   page copy and site constants
 src/pages/     Astro routes
 tests/unit/    engine, store and live-check tests (Node)
-tests/e2e/     conversion, viewer, site structure and accessibility tests (real browsers)
+tests/e2e/     conversion, viewer, failure report, site structure and accessibility tests (real browsers)
 scripts/       fixture, sample, share-image and logo generators, and the live check
 docs/specs/    the specification the tests are written against
 ```

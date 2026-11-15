@@ -6,6 +6,7 @@ import { uniqueNames } from '../engine/names';
 import { Pool } from '../engine/pool';
 import type { Capabilities, ConvertOptions, Target } from '../engine/types';
 import { formatBytes, sizeChange } from './format';
+import { Report } from './Report';
 import { saveAs } from './save';
 import { ConverterStore, defaultOptions, selectedOutputs, totals, useStore, type Item, type State } from './store';
 import './converter.css';
@@ -247,6 +248,7 @@ export default function Converter(props: ConverterProps) {
               />
             ))}
           </ul>
+          {sum.failed > 0 && <Report errors={items.flatMap((item) => item.error ?? [])} />}
         </section>
       )}
     </div>

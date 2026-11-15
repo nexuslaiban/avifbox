@@ -4,6 +4,7 @@ import { Pool, type JobRunner } from '../engine/pool';
 import { probe } from '../engine/probe';
 import type { ImageInfo } from '../engine/types';
 import { formatBytes } from './format';
+import { Report } from './Report';
 import { saveAs } from './save';
 import { ConverterStore, defaultOptions, useStore, type Item } from './store';
 import './converter.css';
@@ -194,6 +195,7 @@ function Opened({ item, runner }: { item: Item; runner: JobRunner }) {
             </>
           ))}
         </dl>
+        {failure && <Report errors={[failure]} />}
         {!failure && (
           <>
             <p class="vw-save">
