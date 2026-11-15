@@ -33,6 +33,11 @@ const GUIDES = ['/what-is-avif', '/how-to-open-avif-file'];
 const INFO = ['/about', '/privacy'];
 const PAGES = ['/', ...TOOLS, VIEWER, ...GUIDES, ...INFO];
 const ORGANIZATION = `${ORIGIN}/#organization`;
+// Found on 2026-11-15: with several browsers running at once, Playwright's WebKit can stop for good
+// inside axe — every thread of the page asleep, waiting on the compositor. Not with one browser, not
+// in Chromium, and not in WebKit tests without axe. What axe checks is markup, names and colours.
+const AXE_IN_WEBKIT =
+  'axe can hang Playwright’s WebKit when tests run in parallel; its rules do not depend on the engine';
 
 /** Words of body copy: everything in <main> except the interactive tool. */
 async function bodyWords(page: Page): Promise<number> {
@@ -432,7 +437,8 @@ test.describe('header menu', () => {
   });
 
   for (const scheme of ['light', 'dark'] as const) {
-    test(`AC-34 an open menu has no serious axe violation (${scheme})`, async ({ page }) => {
+    test(`AC-34 an open menu has no serious axe violation (${scheme})`, async ({ page, browserName }) => {
+      test.skip(browserName === 'webkit', AXE_IN_WEBKIT);
       await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
       await page.goto('/avif-to-jpg');
       await menu(page, 'Converters').locator('summary').click();
@@ -746,7 +752,8 @@ test.describe('layout stability', () => {
 
 test.describe('accessibility', () => {
   for (const scheme of ['light', 'dark'] as const) {
-    test(`AC-28 no serious axe violations (${scheme})`, async ({ page }) => {
+    test(`AC-28 no serious axe violations (${scheme})`, async ({ page, browserName }) => {
+      test.skip(browserName === 'webkit', AXE_IN_WEBKIT);
       await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
       for (const path of PAGES) {
         await page.goto(path);
@@ -764,7 +771,8 @@ test.describe('accessibility', () => {
     });
   }
 
-  test('AC-28 the converter with results on screen has no serious axe violations', async ({ page }) => {
+  test('AC-28 the converter with results on screen has no serious axe violations', async ({ page, browserName }) => {
+    test.skip(browserName === 'webkit', AXE_IN_WEBKIT);
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/avif-to-png');
     await addFiles(page, 'anim.avif', 'hdr-pq.avif', 'corrupt.avif');
@@ -783,7 +791,9 @@ test.describe('accessibility', () => {
   for (const scheme of ['light', 'dark'] as const) {
     test(`AC-28 the viewer with an animation and a chosen frame on screen has no serious axe violations (${scheme})`, async ({
       page,
+      browserName,
     }) => {
+      test.skip(browserName === 'webkit', AXE_IN_WEBKIT);
       await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
       await page.goto(VIEWER);
       await addFiles(page, 'anim.avif');

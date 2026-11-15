@@ -43,6 +43,9 @@ visitor's browser; there is no backend. Spec: `docs/specs/2026-11-11-avifbox-fir
   - The `webkit` project is WebKit, not Safari. This build has `ImageDecoder` (Safari had it in
     Technology Preview only on 2026-11-12) and, on Linux, does not convert a wide-gamut image for an
     sRGB canvas. Safari's codecs and colour can only be checked by hand on a real device.
+  - Tests that only run axe are skipped in the `webkit` project (`AXE_IN_WEBKIT` in
+    `tests/e2e/site.spec.ts`): with several browsers running at once, Playwright's WebKit can hang
+    inside axe for good. A new axe test needs the same skip, or the deploy will stop on it by chance.
   - Compare whole files and images with `expectSameBytes` / `expectSamePixels`
     (`tests/e2e/helpers.ts`), never `toEqual`: when large buffers differ it hangs the worker for
     minutes instead of failing.

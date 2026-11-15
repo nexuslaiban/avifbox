@@ -38,6 +38,9 @@ offline use, dependency updates.
   draft in your own mail program, with the page, the error message and your browser’s user-agent
   already written. Nothing is sent unless you send it, and your file is not attached." Its date
   becomes 2026-11-15.
+- **AC-41 is amended** (on 2026-11-15, when the first deploy with the new command stopped at the E2E
+  run). The seven tests whose only assertion is an axe run — AC-28 and the two of AC-34 — are skipped
+  in WebKit, and the skip says why. They run in Chromium as before.
 
 ## Acceptance criteria
 
@@ -91,6 +94,16 @@ offline use, dependency updates.
 - **Written in TypeScript, run by Node as it is** (`node scripts/verify-live.ts`). Node strips the
   types from 22.18 on, below the version this project requires. So `pnpm check` covers the script and
   the unit tests import it.
+- **axe does not run in WebKit.** In the first deploy the two tests that run axe on every page hung
+  in WebKit, and the deploy stopped before the upload, as it should. Run again afterwards, eight of
+  them at once: seven or eight hang each time, with every thread of the page asleep waiting on the
+  compositor, and four minutes are not enough for them to finish. One at a time they pass. The same
+  walk over every page without axe passes eight at once, and so does axe in Chromium. Leaving out the
+  colour-contrast rule, or the blank page axe opens, changes nothing. The same tests passed earlier
+  that day and on 2026-11-12; a desktop session with Chrome and a screen mirror had been started on
+  the machine in between, and nothing more is known about the cause. A check that fails by chance
+  gets bypassed, so the trigger is taken out instead of being retried. What axe checks — markup,
+  names, contrast — does not depend on the engine.
 - **`X-Frame-Options`, not `frame-ancestors`.** The second needs a Content-Security-Policy header on
   `/*`, which the host would join with the one `/_astro/*` already sends. The first is one line and
   every browser the site supports honours it.
