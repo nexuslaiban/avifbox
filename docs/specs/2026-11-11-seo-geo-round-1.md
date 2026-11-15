@@ -99,7 +99,8 @@ All `E` (Playwright against the built site).
   `/about` describes AVIFBox as an independent project and names nobody; the contact address is
   `hello@avifbox.com`. `avifbox.com` had no MX record when the page was written, so the address
   received nothing. The owner turned on Cloudflare Email Routing later on 2026-11-11: the MX and SPF
-  records were checked that day, delivery to a mailbox was not.
+  records were checked that day, delivery to a mailbox was not. On 2026-11-15 the owner confirmed
+  that mail sent to the address arrives.
 
 ## Approval
 
