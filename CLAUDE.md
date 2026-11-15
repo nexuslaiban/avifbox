@@ -11,16 +11,20 @@ visitor's browser; there is no backend. Spec: `docs/specs/2026-11-11-avifbox-fir
   `pnpm test:e2e` (Playwright, builds first — single test: `pnpm test:e2e -g "AC-05"`, one browser: `--project=firefox`)
 - Build: `pnpm build` → `dist/`
 - Lint/Typecheck: `pnpm check` (astro check) · format: `pnpm format` (Prettier)
-- Deploy: `pnpm run deploy` (builds, then `wrangler deploy`) → Cloudflare Workers static assets on the
-  custom domain `avifbox.com` (`wrangler.jsonc`). Needs `CLOUDFLARE_API_TOKEN` in `.env` (git-ignored).
-  `public/_headers` (cache + worker CSP) ships with the assets. Canonical origin is hard-coded as
-  `https://avifbox.com` in `astro.config.mjs` and `src/content/site.ts`.
+- Deploy: `pnpm run deploy` → Cloudflare Workers static assets on the custom domain `avifbox.com`
+  (`wrangler.jsonc`). It runs `pnpm check`, `pnpm test` and the whole E2E run, uploads `dist/`, then
+  runs `pnpm verify:live`; a step that fails stops the rest. About three minutes. Needs
+  `CLOUDFLARE_API_TOKEN` in `.env` (git-ignored) and port 4322 free. `public/_headers` (cache + worker
+  CSP) ships with the assets. Canonical origin is hard-coded as `https://avifbox.com` in
+  `astro.config.mjs`, `src/content/site.ts` and `public/robots.txt`.
+- Live check: `pnpm verify:live` asks the live site for every file of `dist/` and compares the bytes,
+  and every header of `_headers` (`scripts/site-check.ts`, run by Node as TypeScript).
 - Quirks:
   - `pnpm deploy` is a pnpm built-in, not the script — use `pnpm run deploy`.
   - Cloudflare injects its Web Analytics beacon into HTML on free zones by default. The CSP blocks it,
     which leaves a console error on every page: keep it disabled in the dashboard (Web Analytics →
-    Manage RUM Settings). Local E2E cannot see what the edge injects — after a deploy, fetch a page
-    with a browser User-Agent and compare it with `dist/`.
+    Manage RUM Settings). Local E2E cannot see what the edge injects; `pnpm verify:live` can, and
+    every deploy ends with it.
   - `astro dev` / `astro preview` detach into the background when started by a coding agent. Use
     `--ignore-lock` for a foreground server (the Playwright config does); stop a detached one with
     `pnpm exec astro preview stop`.

@@ -32,6 +32,8 @@ pnpm test         # unit tests (Vitest)
 pnpm test:e2e     # builds, then runs Playwright in Chromium, Firefox and WebKit
 pnpm check        # type check
 pnpm build        # static site in dist/
+pnpm run deploy   # all of the tests, then upload, then verify:live
+pnpm verify:live  # compares the live site with dist/, file by file and header by header
 ```
 
 ## Layout
@@ -41,9 +43,9 @@ src/engine/    conversion engine, framework-free: probe → decode → encode
 src/ui/        Preact converter and viewer, plus the state store
 src/content/   page copy and site constants
 src/pages/     Astro routes
-tests/unit/    engine and store tests (Node)
+tests/unit/    engine, store and live-check tests (Node)
 tests/e2e/     conversion, viewer, site structure and accessibility tests (real browsers)
-scripts/       fixture, sample, share-image and logo generators
+scripts/       fixture, sample, share-image and logo generators, and the live check
 docs/specs/    the specification the tests are written against
 ```
 
