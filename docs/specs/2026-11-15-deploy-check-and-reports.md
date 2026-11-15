@@ -116,6 +116,14 @@ offline use, dependency updates.
   The link needs the address in the browser. Importing it from `site.ts` carried the navigation and
   other page copy into the script; from a file of its own, the link costs 803 bytes of script.
 
+## Found, not fixed
+
+- **On a phone, the Download button covers part of a converted file's size.** At 390 px wide, 54 of
+  the 134 px of "1.63 KB → 519 B" lie under the button and the file name is left 64 px; at 360 px it
+  is 84 px and 34 px. Seen in a screenshot taken for part 3 and then measured. It has been so since
+  the first batch. Mending it means deciding how a row is laid out on a narrow screen, which is a
+  spec of its own.
+
 ## Approval
 
 TOUCHPOINT 1 — approved by the owner on 2026-11-15, all three parts, with the whole E2E run in the
@@ -124,4 +132,18 @@ deployed once with the new command.
 
 ## Observed
 
-Nothing yet.
+- 2026-11-15, AC-45, before the deploy: the live check passed against the site as deployed on
+  2026-11-13 (53 files and 264 headers compared). Once the build had `X-Frame-Options` and the site
+  did not, it failed and named the header as missing on every path.
+- 2026-11-15, AC-47: with a unit test that fails on purpose, `pnpm run deploy` ran the type check and
+  the unit tests, exited with 1, and started neither the E2E run nor the upload. The live check, run
+  afterwards, still found the old site.
+- 2026-11-15, AC-47: the first real deploy stopped by itself at the E2E run — the two tests described
+  under "axe does not run in WebKit" — and uploaded nothing.
+- 2026-11-15, AC-47, AC-45: `pnpm run deploy` from commit `68e6eea`: type check 0 errors, 125 unit
+  tests, E2E 170 passed and 11 skipped, uploaded as Cloudflare version
+  `62a1a754-53b5-472e-9a42-8cd20b01ea83`, live check "53 files and 317 headers compared with dist/ —
+  ok". 129 seconds in all.
+- 2026-11-15, AC-48: a page of another origin holding `<iframe src="https://avifbox.com/">`, opened in
+  Playwright's Chromium, Firefox and WebKit. The frame stays empty in all three, and each browser logs
+  that the site's `X-Frame-Options` forbids it.
