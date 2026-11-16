@@ -615,6 +615,19 @@ test.describe('who runs the site', () => {
     expect(claims.filter((claim) => !claim.test(text)).map(String), '/privacy: statements missing').toEqual([]);
     expect(await externalLinks(page)).toContain('https://www.cloudflare.com/privacypolicy/');
   });
+
+  test('AC-51 /about says where the source code is, and under which licence', async ({ page }) => {
+    const repository = 'https://github.com/nexuslaiban/avifbox';
+    await page.goto('/about');
+
+    const link = page.locator(`#how a[href="${repository}"]`);
+    await expect(link).toHaveCount(1);
+    await expect(link).toHaveText('github.com/nexuslaiban/avifbox');
+
+    const text = ((await page.locator('#how').textContent()) ?? '').replace(/\s+/g, ' ');
+    expect(text).toContain('is public as well, at github.com/nexuslaiban/avifbox, under the AGPL-3.0 licence.');
+    expect(Object.values(SOURCES)).toContain(repository);
+  });
 });
 
 test.describe('citations', () => {

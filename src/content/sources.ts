@@ -32,6 +32,8 @@ export const SOURCES = {
   cloudflarePrivacy: 'https://www.cloudflare.com/privacypolicy/',
   /** What a browser reports when it cannot reach the site; its "Privacy" section says no IP is stored. */
   cloudflareNel: 'https://developers.cloudflare.com/network-error-logging/',
+  /** The repository this site is built from: public since 2026-11-16, AGPL-3.0-only. */
+  sourceCode: 'https://github.com/nexuslaiban/avifbox',
 } as const;
 
 export type Source = keyof typeof SOURCES;
