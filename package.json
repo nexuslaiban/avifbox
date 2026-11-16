@@ -2,6 +2,7 @@
   "name": "avifbox",
   "version": "0.1.0",
   "private": true,
+  "license": "AGPL-3.0-only",
   "type": "module",
   "description": "avifbox.com — image converters that run entirely in the browser",
   "packageManager": "pnpm@10.33.0",

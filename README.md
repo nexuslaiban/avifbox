@@ -60,3 +60,10 @@ APNG are written by `src/engine/png.ts`; JPG comes from the browser's own encode
 - Sample photo: “Earthrise”, NASA / Bill Anders, 1968 — public domain
 - Display P3 ICC profile: [Compact-ICC-Profiles](https://github.com/saucecontrol/Compact-ICC-Profiles), CC0
 - AVIF decoding for HDR: libavif via [jSquash](https://github.com/jamsinclair/jSquash), Apache-2.0
+
+## Licence
+
+The code is licensed under the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-only).
+
+The written content of the pages (the copy in `src/content/` and `src/pages/`), the name AVIFBox and
+the logo are not covered by that licence: all rights reserved.
