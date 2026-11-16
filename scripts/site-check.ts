@@ -36,7 +36,7 @@ export function parseHeaders(text: string): Rules {
 }
 
 /** Where the host serves a file of the build, and with which status. */
-function address(file: string): { path: string; status: number } {
+export function address(file: string): { path: string; status: number } {
   if (file === 'index.html') return { path: '/', status: 200 };
   if (file === '404.html') return { path: NOWHERE, status: 404 };
   return { path: `/${file.replace(/\.html$/, '')}`, status: 200 };

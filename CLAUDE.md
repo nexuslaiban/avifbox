@@ -12,13 +12,19 @@ visitor's browser; there is no backend. Spec: `docs/specs/2026-11-11-avifbox-fir
 - Build: `pnpm build` → `dist/`
 - Lint/Typecheck: `pnpm check` (astro check) · format: `pnpm format` (Prettier)
 - Deploy: `pnpm run deploy` → Cloudflare Workers static assets on the custom domain `avifbox.com`
-  (`wrangler.jsonc`). It runs `pnpm check`, `pnpm test` and the whole E2E run, uploads `dist/`, then
-  runs `pnpm verify:live`; a step that fails stops the rest. About three minutes. Needs
+  (`wrangler.jsonc`). It runs `pnpm check`, `pnpm test` and the whole E2E run, uploads `dist/`, runs
+  `pnpm verify:live`, then tells IndexNow; a step that fails stops the rest. About three minutes. Needs
   `CLOUDFLARE_API_TOKEN` in `.env` (git-ignored) and port 4322 free. `public/_headers` (cache + worker
   CSP) ships with the assets. Canonical origin is hard-coded as `https://avifbox.com` in
   `astro.config.mjs`, `src/content/site.ts` and `public/robots.txt`.
 - Live check: `pnpm verify:live` asks the live site for every file of `dist/` and compares the bytes,
   and every header of `_headers` (`scripts/site-check.ts`, run by Node as TypeScript).
+- IndexNow: `pnpm indexnow before` (ahead of the upload) notes the pages the live site does not serve
+  as built, `pnpm indexnow after` (behind the live check) sends them to `api.indexnow.org`
+  (`scripts/indexnow.ts`). Only changed pages are sent: the protocol asks for that. The key is the
+  file `public/<key>.txt`, public by design. The note is `.indexnow-owed.json` (git-ignored) and stays
+  until IndexNow accepts it: when a deploy stops after the upload the site is already live, and
+  `pnpm indexnow after` or the next deploy sends what is owed. Do not delete it.
 - Quirks:
   - `pnpm deploy` is a pnpm built-in, not the script — use `pnpm run deploy`.
   - Cloudflare injects its Web Analytics beacon into HTML on free zones by default. The CSP blocks it,

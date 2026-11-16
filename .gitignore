@@ -8,3 +8,5 @@ playwright-report/
 .env
 .env.*
 .wrangler/
+# What IndexNow is still owed (scripts/tell-indexnow.ts)
+.indexnow-owed.json

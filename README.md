@@ -34,7 +34,7 @@ pnpm test         # unit tests (Vitest)
 pnpm test:e2e     # builds, then runs Playwright in Chromium, Firefox and WebKit
 pnpm check        # type check
 pnpm build        # static site in dist/
-pnpm run deploy   # all of the tests, then upload, then verify:live
+pnpm run deploy   # all of the tests, upload, verify:live, then tell IndexNow what changed
 pnpm verify:live  # compares the live site with dist/, file by file and header by header
 ```
 
@@ -47,7 +47,7 @@ src/content/   page copy and site constants
 src/pages/     Astro routes
 tests/unit/    engine, store and live-check tests (Node)
 tests/e2e/     conversion, viewer, failure report, site structure and accessibility tests (real browsers)
-scripts/       fixture, sample, share-image and logo generators, and the live check
+scripts/       fixture, sample, share-image and logo generators, the live check, the IndexNow notice
 docs/specs/    the specification the tests are written against
 ```
 
