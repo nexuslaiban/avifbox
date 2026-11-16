@@ -48,3 +48,10 @@ Approved by the owner on 2026-11-16, in reply to the proposal to add this link t
 to `main` once its tests are green, then deployed with `pnpm run deploy`.
 
 ## Observed
+
+- 2026-11-16, AC-51: `https://github.com/nexuslaiban/avifbox` answers 200 to a request that is not
+  signed in, and GitHub's API names the repository's licence as AGPL-3.0.
+- 2026-11-16, AC-51: `pnpm run deploy` from commit `1e050d8`: type check 0 errors, 125 unit tests, E2E
+  172 passed and 11 skipped, one file uploaded (the other 52 were already there) as Cloudflare version
+  `fde42f10-5a88-4929-aa8c-762c3ade172e`, live check "53 files and 317 headers compared with dist/ —
+  ok". 132 seconds in all. `/about` on the live site carries the sentence and the link.
