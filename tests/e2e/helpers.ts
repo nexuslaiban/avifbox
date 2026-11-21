@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { unzipSync, unzlibSync } from 'fflate';
 import jpeg from 'jpeg-js';
 import { PNG } from 'pngjs';
+import type { HdrImage } from '../../src/engine/hdr';
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), '..', 'fixtures');
 
@@ -171,6 +172,35 @@ export function readPng(bytes: Buffer): Raster {
 export function readJpeg(bytes: Buffer): Raster {
   const image = jpeg.decode(bytes, { useTArray: true });
   return raster(image.width, image.height, image.data);
+}
+
+/**
+ * The HDR fixture as its generator describes it: the 10-bit PQ codes of its patches as an image the
+ * engine's tone mapping takes, and the centre of the patch in a column and a row.
+ */
+export function hdrPatches(): { source: HdrImage; centre(column: number, row: number): [number, number] } {
+  const layout = JSON.parse(fixtureBytes('hdr-pq.json').toString()) as {
+    patch: number;
+    width: number;
+    height: number;
+    rows: number[][][];
+  };
+  const data = new Uint16Array(layout.width * layout.height * 4);
+  for (let y = 0; y < layout.height; y++) {
+    for (let x = 0; x < layout.width; x++) {
+      const code = layout.rows[Math.floor(y / layout.patch)][Math.floor(x / layout.patch)];
+      data.set([...code.map((c) => Math.round((c / 1023) * 65535)), 65535], (y * layout.width + x) * 4);
+    }
+  }
+  return {
+    source: { data, width: layout.width, height: layout.height, transfer: 'pq', primaries: 9 },
+    centre: (column, row) => [column * layout.patch + 4, row * layout.patch + 4],
+  };
+}
+
+/** Whether a pixel is within two levels of the one expected, in every channel. */
+export function expectClose(actual: number[], expected: ArrayLike<number>): void {
+  for (let c = 0; c < 4; c++) expect(Math.abs(actual[c] - expected[c])).toBeLessThanOrEqual(2);
 }
 
 export interface Chunk {

@@ -1,0 +1,89 @@
+/* The failure window, in the site's colours. System fonts: a window this small is not worth 100 kB of type. */
+:root {
+  color-scheme: light dark;
+  --paper: #f3ead8;
+  --card: #fffaf0;
+  --ink: #1b1712;
+  --ink-soft: #564d40;
+  --accent: #c8330f;
+  --focus: #1746d1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #15120e;
+    --card: #1e1a14;
+    --ink: #f2e9d8;
+    --ink-soft: #b9ad98;
+    --accent: #ff7a4d;
+    --focus: #9dbcff;
+  }
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  border-top: 6px solid var(--accent);
+  background: var(--paper);
+  color: var(--ink);
+  font:
+    14px/1.45 system-ui,
+    'Segoe UI',
+    Roboto,
+    Arial,
+    sans-serif;
+}
+
+main {
+  padding: 16px 20px 20px;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 19px;
+  line-height: 1.2;
+}
+
+p {
+  margin: 0 0 10px;
+}
+
+#failure {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.advice {
+  color: var(--ink-soft);
+}
+
+a {
+  color: var(--ink);
+  text-underline-offset: 2px;
+}
+
+button {
+  margin-top: 4px;
+  padding: 6px 18px;
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  background: var(--card);
+  box-shadow: 3px 3px 0 var(--ink);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:active {
+  box-shadow: none;
+  transform: translate(3px, 3px);
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}

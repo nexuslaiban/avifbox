@@ -3,13 +3,18 @@
 Static, pure-frontend image converter (AVIF / JFIF / WebP → PNG / JPG). Files are converted in the
 visitor's browser; there is no backend. Spec: `docs/specs/2026-11-11-avifbox-first-batch.md`.
 
+`extension/` is a Chrome extension (Manifest V3) on the same engine: right-click an image, save it as
+PNG or JPG. Spec: `docs/specs/2026-11-21-extension-save-image-as.md`; map: `extension/DESIGN.md`. Not
+published in any store.
+
 ## Workflow manifest
 
 - Stack: TypeScript / Astro 7 (static output) + Preact island / pnpm 10, Node ≥ 22.23
 - Dev: `pnpm dev`
 - Test: `pnpm test` (Vitest, unit — single file: `pnpm test tests/unit/png.test.ts`)
-  `pnpm test:e2e` (Playwright, builds first — single test: `pnpm test:e2e -g "AC-05"`, one browser: `--project=firefox`)
-- Build: `pnpm build` → `dist/`
+  `pnpm test:e2e` (Playwright, builds first — single test: `pnpm test:e2e -g "AC-05"`, one browser: `--project=firefox`,
+  the extension alone: `--project=extension`)
+- Build: `pnpm build` → `dist/` · `pnpm build:extension` (Vite) → `dist-extension/`, which Chrome loads unpacked
 - Lint/Typecheck: `pnpm check` (astro check) · format: `pnpm format` (Prettier)
 - Deploy: `pnpm run deploy` → Cloudflare Workers static assets on the custom domain `avifbox.com`
   (`wrangler.jsonc`). It runs `pnpm check`, `pnpm test` and the whole E2E run, uploads `dist/`, runs
@@ -41,7 +46,8 @@ visitor's browser; there is no backend. Spec: `docs/specs/2026-11-11-avifbox-fir
   - `public/samples/*.png` are produced by the converter itself. After changing the engine run
     `pnpm samples`, or AC-26 fails (it compares bytes).
   - Tool page copy must stay within 900–1,300 words (AC-23 counts it).
-  - `pnpm fixtures` needs ffmpeg with libaom-av1 and libwebp; fixtures are committed.
+  - `pnpm fixtures` needs ffmpeg with libaom-av1 and libwebp, and ImageMagick (`magick`); fixtures are
+    committed.
   - Playwright is pinned to 1.63.0 to match the browser builds in `~/.cache/ms-playwright`. Its WebKit
     needs two system packages on Ubuntu 26.04: `sudo apt install libevent-2.1-7t64 libmanette-0.2-0`.
     Nothing else works: WebKit's wrapper resets `LD_LIBRARY_PATH`, and a link in the build's `sys/lib`
@@ -61,3 +67,17 @@ visitor's browser; there is no backend. Spec: `docs/specs/2026-11-11-avifbox-fir
     file decoded is the engine's call, not the image element's (`src/ui/Viewer.tsx`).
   - `.band` hides horizontal overflow, so `scrollWidth - clientWidth` is 0 even when the tool sticks
     out of a phone screen. Measure bounding boxes (`tests/e2e/viewer.spec.ts`).
+  - Extension: its service worker has no `Worker`, no `ImageDecoder` and no `URL.createObjectURL`. The
+    engine runs in the hidden (offscreen) document; do not move it.
+  - Extension: `chrome` is typed by `extension/api.ts`, not `@types/chrome`, which would make it a
+    global of the engine too. A new API call is added to that interface first.
+  - Extension tests (`tests/extension/fixture.ts`) run against `dist-extension/`. Playwright only
+    builds it when it starts its own server: with a preview server already on port 4322, run
+    `pnpm build:extension` first or the tests see the old build.
+  - Extension tests cannot click the native menu; they fire `contextMenus.onClicked` in the service
+    worker. Playwright's download handling ignores the name an extension asks for, so the fixture
+    gives the browser its own home and download folder and switches it back to its own handling.
+  - Playwright does not notice an extension's service worker stopping or starting again: its handle
+    stays and no new one is announced. Ask the browser (`Target.getTargets`), as AC-72 does.
+  - Node gives an address of an extension no origin (`new URL('chrome-extension://…').origin` is
+    `"null"`). Build such addresses from the service worker's own address.

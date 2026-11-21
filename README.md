@@ -6,6 +6,9 @@ plain static bundle with no backend.
 
 Live at **[avifbox.com](https://avifbox.com)**.
 
+The same engine is also a browser extension: right-click an image on any page and save it as PNG or
+JPG. It lives in [`extension/`](extension/README.md) and is not in any store yet.
+
 ## What it does
 
 | Route                                     |                                             |
@@ -31,9 +34,10 @@ Live at **[avifbox.com](https://avifbox.com)**.
 pnpm install
 pnpm dev          # local dev server
 pnpm test         # unit tests (Vitest)
-pnpm test:e2e     # builds, then runs Playwright in Chromium, Firefox and WebKit
+pnpm test:e2e     # builds, then runs Playwright: the site in Chromium, Firefox and WebKit, the extension in Chromium
 pnpm check        # type check
 pnpm build        # static site in dist/
+pnpm build:extension  # the browser extension in dist-extension/, to load unpacked in Chrome
 pnpm run deploy   # all of the tests, upload, verify:live, then tell IndexNow what changed
 pnpm verify:live  # compares the live site with dist/, file by file and header by header
 ```
@@ -45,9 +49,11 @@ src/engine/    conversion engine, framework-free: probe → decode → encode
 src/ui/        Preact converter and viewer, plus the state store
 src/content/   page copy and site constants
 src/pages/     Astro routes
-tests/unit/    engine, store and live-check tests (Node)
+extension/     browser extension (Chrome, Manifest V3) built on the engine: right-click an image, save as PNG or JPG
+tests/unit/    engine, store, extension logic and live-check tests (Node)
 tests/e2e/     conversion, viewer, failure report, site structure and accessibility tests (real browsers)
-scripts/       fixture, sample, share-image and logo generators, the live check, the IndexNow notice
+tests/extension/  the built extension loaded into Chromium
+scripts/       fixture, sample, share-image, logo and icon generators, the live check, the IndexNow notice
 docs/specs/    the specification the tests are written against
 ```
 

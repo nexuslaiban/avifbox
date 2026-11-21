@@ -2,7 +2,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { MAX_FILES, MAX_FILE_BYTES, admit } from '../engine/limits';
 import { outputName, stem, uniqueStem } from '../engine/names';
 import type { JobRunner } from '../engine/pool';
-import type { ConvertEvent, ConvertOptions, ImageInfo, Target } from '../engine/types';
+import type { ConvertEvent, ConvertOptions, ImageInfo } from '../engine/types';
 
 // The converter's state: the list of files, what each one turned into, and the current settings.
 // Results are always for the current settings — changing one re-converts the whole list.
@@ -43,19 +43,7 @@ export interface State {
   notice: string | null;
 }
 
-/** The settings a page starts with. */
-export function defaultOptions(target: Target, animation: ConvertOptions['animation'] = 'frames'): ConvertOptions {
-  return {
-    target,
-    pngMode: 'truecolor',
-    quality: 90,
-    background: null,
-    animation,
-    tone: 'brightness',
-    gamut: 'srgb',
-    keepJpeg: true,
-  };
-}
+export { defaultOptions } from '../engine/options';
 
 const megabytes = MAX_FILE_BYTES / (1024 * 1024);
 /** How long a setting must stay unchanged before files are converted again. */

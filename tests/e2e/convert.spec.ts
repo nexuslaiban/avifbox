@@ -1,16 +1,18 @@
 import { expect, test } from '@playwright/test';
 import { PNG } from 'pngjs';
-import { SDR_WHITE, toneMap, type HdrImage } from '../../src/engine/hdr';
+import { SDR_WHITE, toneMap } from '../../src/engine/hdr';
 import {
   addFiles,
   download,
   downloadLink,
   downloadNamed,
   dropFiles,
+  expectClose,
   expectSameBytes,
   expectSamePixels,
   fileRows,
   fixtureBytes,
+  hdrPatches,
   inflateSync,
   openAdvanced,
   pasteFiles,
@@ -96,27 +98,7 @@ test.describe('AVIF to PNG', () => {
   });
 
   test('AC-06 an HDR AVIF is tone-mapped, with two modes', async ({ page }) => {
-    const layout = JSON.parse(fixtureBytes('hdr-pq.json').toString()) as {
-      patch: number;
-      width: number;
-      height: number;
-      rows: number[][][];
-    };
-    const data = new Uint16Array(layout.width * layout.height * 4);
-    for (let y = 0; y < layout.height; y++) {
-      for (let x = 0; x < layout.width; x++) {
-        const code = layout.rows[Math.floor(y / layout.patch)][Math.floor(x / layout.patch)];
-        data.set([...code.map((c) => Math.round((c / 1023) * 65535)), 65535], (y * layout.width + x) * 4);
-      }
-    }
-    const source: HdrImage = { data, width: layout.width, height: layout.height, transfer: 'pq', primaries: 9 };
-    const centre = (column: number, row: number): [number, number] => [
-      column * layout.patch + 4,
-      row * layout.patch + 4,
-    ];
-    const expectClose = (actual: number[], expected: ArrayLike<number>) => {
-      for (let c = 0; c < 4; c++) expect(Math.abs(actual[c] - expected[c])).toBeLessThanOrEqual(2);
-    };
+    const { source, centre } = hdrPatches();
 
     await addFiles(page, 'hdr-pq.avif');
     await settled(page, 1);
@@ -129,7 +111,7 @@ test.describe('AVIF to PNG', () => {
     for (let row = 0; row < 2; row++) {
       for (let column = 0; column < 6; column++) {
         const [x, y] = centre(column, row);
-        expectClose(brightness.at(x, y), expectedBrightness.subarray((y * layout.width + x) * 4));
+        expectClose(brightness.at(x, y), expectedBrightness.subarray((y * source.width + x) * 4));
       }
     }
     // Sanity anchors that do not depend on our own implementation: black stays black, the 1000-nit
@@ -144,7 +126,7 @@ test.describe('AVIF to PNG', () => {
     const colour = readPng(await downloadNamed(page, 'hdr-pq.png'));
     const expectedColour = toneMap(source, 'colour', 'srgb');
     const [x, y] = centre(3, 1); // bright orange
-    expectClose(colour.at(x, y), expectedColour.subarray((y * layout.width + x) * 4));
+    expectClose(colour.at(x, y), expectedColour.subarray((y * source.width + x) * 4));
     expect(colour.at(x, y)).not.toEqual(brightness.at(x, y));
   });
 

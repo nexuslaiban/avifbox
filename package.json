@@ -12,6 +12,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "build:extension": "vite build --config extension/vite.config.ts",
     "preview": "astro preview",
     "deploy": "pnpm check && pnpm test && CI=1 pnpm test:e2e && pnpm indexnow before && wrangler deploy && pnpm verify:live && pnpm indexnow after",
     "verify:live": "node scripts/verify-live.ts",
@@ -51,6 +52,7 @@
     "prettier": "^3.9.10",
     "prettier-plugin-astro": "^1.1.2",
     "typescript": "^6.0.3",
+    "vite": "^8.3.7",
     "vitest": "^5.1.0",
     "wrangler": "^4.160.0"
   }

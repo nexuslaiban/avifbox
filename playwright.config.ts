@@ -20,11 +20,13 @@ export default defineConfig({
     // Everything: WebKit is where layout and platform features differ most. It is the engine, not Safari:
     // this build has ImageDecoder and, on Linux, no colour management for decoded images.
     { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    // The browser extension: each test loads dist-extension/ into a Chromium of its own and uses no page of the site.
+    { name: 'extension', testDir: 'tests/extension' },
   ],
   webServer: {
     // --ignore-lock keeps the server in the foreground even when Astro detects a coding agent and
     // would otherwise detach it, which Playwright reads as the server exiting early.
-    command: `pnpm build && pnpm exec astro preview --port ${PORT} --ignore-lock`,
+    command: `pnpm build && pnpm build:extension && pnpm exec astro preview --port ${PORT} --ignore-lock`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,

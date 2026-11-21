@@ -1,4 +1,4 @@
-// Regenerates tests/fixtures/*. Needs ffmpeg (libaom-av1, libwebp) on PATH.
+// Regenerates tests/fixtures/*. Needs ffmpeg (libaom-av1, libwebp) and ImageMagick (`magick`) on PATH.
 // The fixtures are committed; run this only when a fixture has to change.
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
@@ -92,6 +92,10 @@ ffmpeg(
   '0',
   f('anim.webp'),
 );
+// The first frame of anim.webp as libwebp decodes it: the reference for "the first frame of the
+// animation". It is not the card of still.png, because the animation was encoded from 4:2:0 video.
+// ffmpeg does not read an animated WebP, so this one file needs ImageMagick.
+execFileSync('magick', [`${f('anim.webp')}[0]`, '-strip', f('anim-webp-first.png')], { stdio: 'inherit' });
 
 // --- HDR: 10-bit BT.2020 PQ patches, lossless. Codes are 10-bit PQ code values per channel.
 {

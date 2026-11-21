@@ -1,6 +1,7 @@
 // Renders the brand's raster files into public/: og.png (1200x630), the image shown when a page is
 // shared, and the mark of favicon.svg as logo.png (512 px, the logo named in the Organization data),
-// apple-touch-icon.png (180 px) and favicon.ico (16, 32 and 48 px). Run when the brand changes.
+// apple-touch-icon.png (180 px) and favicon.ico (16, 32 and 48 px), and the mark as the browser
+// extension's icons into extension/public/icons/. Run when the brand changes.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
@@ -87,6 +88,9 @@ save('apple-touch-icon.png', await mark(180));
 const small = [];
 for (const size of [16, 32, 48]) small.push({ size, png: PNG.sync.write(PNG.sync.read(await mark(size))) });
 save('favicon.ico', ico(small));
+// The extension's icons: 16 px beside its menu item, 48 on the browser's extensions page, 128 in a store.
+for (const size of [16, 32, 48, 128])
+  writeFileSync(join(root, 'extension', 'public', 'icons', `${size}.png`), await mark(size));
 
 await browser.close();
-console.log('wrote og.png, logo.png, apple-touch-icon.png and favicon.ico to public/');
+console.log('wrote og.png, logo.png, apple-touch-icon.png and favicon.ico to public/, and the extension icons');
