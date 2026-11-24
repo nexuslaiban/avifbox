@@ -13,7 +13,18 @@ const path = '/how-to-open-avif-file';
 const dates = GUIDE_DATES[path];
 const title = 'How to Open an AVIF File (PC, Mac, iPhone, Android) | AVIFBox';
 const description =
-  'Open an AVIF file on Windows, Mac, iPhone or Android, in Photoshop or Paint — or view it right here in your browser and convert it to PNG or JPG.';
+  'Open an AVIF file on Windows, Mac, iPhone, Android or Linux, in Photoshop or Paint — or view it here in your browser and convert it to PNG or JPG.';
+
+/** The short answer per system: what opens the file, and what to add if it does not. */
+const glance: [string, string, string][] = [
+  ['Windows 10 and 11', 'Photos, Paint, File Explorer thumbnails', 'The free AV1 Video Extension'],
+  ['macOS 13 Ventura or later', 'Preview, Quick Look, Photos, Safari', 'Nothing'],
+  ['iPhone and iPad, iOS 16 or later', 'Photos, Files, Safari', 'Nothing'],
+  ['Android 12 or later', 'Google Photos, Files, Chrome', 'Nothing'],
+  ['Linux', 'Chrome, Firefox', 'Nothing for a browser'],
+  ['Photoshop', 'Version 26.8 (June 2025) or later', 'An update, or convert to PNG'],
+  ['Any older system', 'A current web browser', 'Or convert to JPG or PNG'],
+];
 
 const systems: { id: string; title: string; body: string[] }[] = [
   {
@@ -53,11 +64,27 @@ const systems: { id: string; title: string; body: string[] }[] = [
     ],
   },
   {
+    id: 'linux',
+    title: 'On Linux',
+    body: [
+      'Chrome and Firefox display AVIF on Linux exactly as they do elsewhere, so dragging the file into a browser window always works. Whether the desktop’s own image viewer opens it depends on the distribution and how recent its image libraries are.',
+      `For the command line, ${cite('libavif', 'libavif')} — the reference AVIF library — ships <code>avifdec</code>, which writes a PNG or JPG from an AVIF in one command.`,
+    ],
+  },
+  {
     id: 'photoshop',
     title: 'In Photoshop',
     body: [
       `Photoshop has opened AVIF only since 2025: Adobe lists the format in its ${cite('photoshop', 'June 2025 release, <strong>version 26.8</strong>')}. In earlier versions the file is greyed out in File › Open. Rather than hunting for a plug-in, convert it to PNG: that is lossless, keeps transparency, and every version of Photoshop reads it.`,
       `GIMP reads AVIF from ${cite('gimp', 'version 2.10.22')}.`,
+    ],
+  },
+  {
+    id: 'office',
+    title: 'In Word, email and upload forms',
+    body: [
+      'Office suites, email clients, print shops and many website upload forms still refuse AVIF, or accept the file and then show nothing. There is no setting to change on your side: the program at the other end has to read the format.',
+      'Convert the image before you insert, attach or upload it. <a href="/avif-to-jpg">AVIF to JPG</a> gives a small file that every form accepts; JPG has no transparency, so use <a href="/avif-to-png">AVIF to PNG</a> for a logo or a cut-out.',
     ],
   },
   {
@@ -91,9 +118,29 @@ const faq: FaqEntry[] = [
       'An AVIF is an ordinary image, no riskier than a JPG or PNG. Viewing it on this page does not send it anywhere.',
   },
   {
+    question: 'Why did a picture I downloaded save as .avif?',
+    answer:
+      'Websites send AVIF because it is small, and Save image as keeps the file exactly as the website sent it. The picture is fine; only older software cannot read it.',
+  },
+  {
+    question: 'Can I just rename an .avif file to .jpg?',
+    answer:
+      'No. The name changes but the contents are still AVIF, so a program that cannot read AVIF still fails. Converting writes a real JPG. The one case where a rename works is a .jfif, which is a JPEG already: <a href="/jfif-to-jpg">JFIF to JPG</a> does exactly that.',
+  },
+  {
+    question: 'How do I open an AVIF file on Linux?',
+    answer:
+      'Drag it into Chrome or Firefox, or use the viewer on this page. On the command line, avifdec from libavif converts it to PNG or JPG.',
+  },
+  {
     question: 'How do I turn an AVIF into a JPG or PNG?',
     answer:
       'Use <a href="/avif-to-jpg">AVIF to JPG</a> for a small file that opens everywhere, or <a href="/avif-to-png">AVIF to PNG</a> for a lossless copy that keeps transparency.',
+  },
+  {
+    question: 'Does converting an AVIF lose quality?',
+    answer:
+      'Converting to PNG loses nothing: every pixel is kept as decoded. JPG compresses again, but at the default quality the difference is hard to see, and the file opens everywhere.',
   },
 ];
 
@@ -134,11 +181,39 @@ const jsonLd = [articleSchema({ path, headline: 'How to open an AVIF file', desc
   </section>
 
   <article class="doc wrap">
+    <section id="at-a-glance">
+      <div class="sec-head">
+        <span class="sec-no">№ 01</span>
+        <h2>The short answer, system by system</h2>
+      </div>
+      <div class="slip" tabindex="0" role="region" aria-label="What opens an AVIF file">
+        <table>
+          <caption>What opens an AVIF file, and what to add if it does not</caption>
+          <thead>
+            <tr>
+              <td></td>
+              <th scope="col">Opens AVIF in</th>
+              <th scope="col">What to install</th>
+            </tr>
+          </thead>
+          <tbody>
+            {glance.map(([system, opens, install]) => (
+              <tr>
+                <th scope="row">{system}</th>
+                <td>{opens}</td>
+                <td>{install}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
     <section class="split">
       {systems.map((system, index) => (
         <section id={system.id}>
           <div class="sec-head">
-            <span class="sec-no">№ {String(index + 1).padStart(2, '0')}</span>
+            <span class="sec-no">№ {String(index + 2).padStart(2, '0')}</span>
             <h2>{system.title}</h2>
           </div>
           <div class="prose">
@@ -150,7 +225,7 @@ const jsonLd = [articleSchema({ path, headline: 'How to open an AVIF file', desc
       ))}
       <section id="convert">
         <div class="sec-head">
-          <span class="sec-no">№ {String(systems.length + 1).padStart(2, '0')}</span>
+          <span class="sec-no">№ {String(systems.length + 2).padStart(2, '0')}</span>
           <h2>When nothing works: convert it</h2>
         </div>
         <div class="prose">
@@ -160,19 +235,23 @@ const jsonLd = [articleSchema({ path, headline: 'How to open an AVIF file', desc
             and keeps transparency, animation frames included.
           </p>
           <p>
-            Both run in your browser and never upload the image. To understand the format itself, read{' '}
+            Pictures saved from the web also arrive as .webp or .jfif. <a href="/webp-to-jpg">WebP to JPG</a> and{' '}
+            <a href="/jfif-to-jpg">JFIF to JPG</a> deal with those the same way.
+          </p>
+          <p>
+            All of them run in your browser and never upload the image. To understand the format itself, read{' '}
             <a href="/what-is-avif">what AVIF is</a>.
           </p>
         </div>
       </section>
     </section>
 
-    <Faq number={`№ ${String(systems.length + 2).padStart(2, '0')}`} entries={faq} />
+    <Faq number={`№ ${String(systems.length + 3).padStart(2, '0')}`} entries={faq} />
     <Cards
       id="related"
-      number={`№ ${String(systems.length + 3).padStart(2, '0')}`}
+      number={`№ ${String(systems.length + 4).padStart(2, '0')}`}
       title="More from the box"
-      links={[RELATED.avifToPng, RELATED.avifToJpg, RELATED.whatIsAvif, RELATED.webpToPng]}
+      links={[RELATED.avifToJpg, RELATED.avifToPng, RELATED.viewer, RELATED.whatIsAvif]}
     />
   </article>
 </Base>
