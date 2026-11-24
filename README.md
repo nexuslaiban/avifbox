@@ -42,6 +42,10 @@ pnpm run deploy   # all of the tests, upload, verify:live, then tell IndexNow wh
 pnpm verify:live  # compares the live site with dist/, file by file and header by header
 ```
 
+A push to `main` deploys: GitHub Actions runs `pnpm run deploy` (`.github/workflows/deploy.yml`). A
+tag `extension-v<version>`, the version of `extension/public/manifest.json`, attaches the built
+extension as a zip to a GitHub Release (`.github/workflows/extension.yml`).
+
 ## Layout
 
 ```

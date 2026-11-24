@@ -1,0 +1,46 @@
+# Releases the browser extension: a push of the tag extension-v<version> attaches the built extension to a
+# GitHub Release of that name. Spec: docs/specs/2026-11-24-github-actions.md
+name: extension
+
+on:
+  push:
+    tags: ['extension-v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      # The token may write the repository: kept out of .git/config, where the build's dependencies could read it.
+      # gh gets it alone, at the end.
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      # Before anything is installed: a release whose zip says another version than its name is worse than none.
+      - name: The tag names the manifest's version
+        run: |
+          tagged="${GITHUB_REF_NAME#extension-v}"
+          manifest="$(jq -r .version extension/public/manifest.json)"
+          if [ "$tagged" != "$manifest" ]; then
+            echo "::error::the tag says $tagged, extension/public/manifest.json says $manifest"
+            exit 1
+          fi
+          echo "ZIP=avifbox-extension-$manifest.zip" >> "$GITHUB_ENV"
+      # Pinned by commit: this job may write the repository.
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      # Playwright's web server builds dist-extension/ before the tests run.
+      - run: pnpm test:e2e --project=extension
+      # The content of the folder, not the folder: manifest.json at the root, as Chrome and its store expect.
+      - run: cd dist-extension && zip -qr "../$ZIP" .
+      - run: gh release create "$GITHUB_REF_NAME" "$ZIP" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}

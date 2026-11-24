@@ -22,6 +22,11 @@ published in any store.
   `CLOUDFLARE_API_TOKEN` in `.env` (git-ignored) and port 4322 free. `public/_headers` (cache + worker
   CSP) ships with the assets. Canonical origin is hard-coded as `https://avifbox.com` in
   `astro.config.mjs`, `src/content/site.ts` and `public/robots.txt`.
+- CI: a push to `main` deploys — `.github/workflows/deploy.yml` runs `pnpm run deploy` on GitHub, with
+  the token as the secret `CLOUDFLARE_API_TOKEN` of the environment `production`; one deploy at a time.
+  Work that should not go live yet goes to another branch. A tag `extension-v<version>` (the manifest's
+  version) attaches the extension zip to a GitHub Release (`.github/workflows/extension.yml`). Spec:
+  `docs/specs/2026-11-24-github-actions.md`. `pnpm run deploy` from a machine still works.
 - Live check: `pnpm verify:live` asks the live site for every file of `dist/` and compares the bytes,
   and every header of `_headers` (`scripts/site-check.ts`, run by Node as TypeScript).
 - IndexNow: `pnpm indexnow before` (ahead of the upload) notes the pages the live site does not serve
@@ -29,9 +34,13 @@ published in any store.
   (`scripts/indexnow.ts`). Only changed pages are sent: the protocol asks for that. The key is the
   file `public/<key>.txt`, public by design. The note is `.indexnow-owed.json` (git-ignored) and stays
   until IndexNow accepts it: when a deploy stops after the upload the site is already live, and
-  `pnpm indexnow after` or the next deploy sends what is owed. Do not delete it.
+  `pnpm indexnow after` or the next deploy sends what is owed. Do not delete it. A run on GitHub keeps
+  its note in GitHub's Actions cache instead (`indexnow-owed-*`): a machine and GitHub do not see each
+  other's note.
 - Quirks:
   - `pnpm deploy` is a pnpm built-in, not the script — use `pnpm run deploy`.
+  - GitHub refuses a push that changes `.github/workflows/` unless gh's token has the `workflow`
+    scope: `env -u GH_TOKEN gh auth refresh -h github.com -s workflow` (opens a browser).
   - Cloudflare injects its Web Analytics beacon into HTML on free zones by default. The CSP blocks it,
     which leaves a console error on every page: keep it disabled in the dashboard (Web Analytics →
     Manage RUM Settings). Local E2E cannot see what the edge injects; `pnpm verify:live` can, and

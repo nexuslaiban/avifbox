@@ -17,7 +17,12 @@ pnpm test:e2e --project=extension      # the built extension in Chromium (Playwr
 ```
 
 To try it by hand: open `chrome://extensions`, switch on "Developer mode", choose "Load unpacked" and
-pick `dist-extension/`. Then right-click an image → "Save image as PNG or JPG" → "PNG" or "JPG".
+pick `dist-extension/` (or the unpacked zip of a GitHub Release). Then right-click an image → "Save
+image as PNG or JPG" → "PNG" or "JPG".
+
+To release a version: raise `version` in `public/manifest.json`, commit, then push the tag
+`extension-v<version>`. GitHub Actions runs the tests above and attaches `avifbox-extension-<version>.zip`
+to a release of that name; a tag that names another version than the manifest fails.
 
 It is not published in any store yet.
 
