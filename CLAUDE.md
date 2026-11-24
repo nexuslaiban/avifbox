@@ -1,7 +1,8 @@
 # avifbox.com
 
-Static, pure-frontend image converter (AVIF / JFIF / WebP → PNG / JPG). Files are converted in the
-visitor's browser; there is no backend. Spec: `docs/specs/2026-11-11-avifbox-first-batch.md`.
+Static, pure-frontend image converter (AVIF / JFIF / WebP → PNG / JPG, and JPG / PNG / WebP → AVIF
+since `docs/specs/2026-11-23-to-avif.md`). Files are converted in the visitor's browser; there is no
+backend. Spec: `docs/specs/2026-11-11-avifbox-first-batch.md`.
 
 `extension/` is a Chrome extension (Manifest V3) on the same engine: right-click an image, save it as
 PNG or JPG. Spec: `docs/specs/2026-11-21-extension-save-image-as.md`; map: `extension/DESIGN.md`. Not

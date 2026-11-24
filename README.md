@@ -1,6 +1,7 @@
 # AVIFBox
 
-Image converters that run entirely in the browser: AVIF, JFIF and WebP to PNG or JPG.
+Image converters that run entirely in the browser: AVIF, JFIF and WebP to PNG or JPG, and JPG,
+PNG and WebP to AVIF.
 Nothing is uploaded — decoding and encoding happen on the visitor's device, so the site is a
 plain static bundle with no backend.
 
@@ -11,16 +12,17 @@ JPG. It lives in [`extension/`](extension/README.md) and is not in any store yet
 
 ## What it does
 
-| Route                                     |                                             |
-| ----------------------------------------- | ------------------------------------------- |
-| `/`                                       | Hub: any supported image to PNG or JPG      |
-| `/avif-to-png`, `/avif-to-jpg`            | AVIF, including animated, 10/12-bit and HDR |
-| `/avif-to-apng`                           | Animated AVIF to one animated PNG           |
-| `/jfif-to-jpg`, `/jfif-to-png`            | JFIF to JPG is a lossless rename by default |
-| `/webp-to-png`, `/webp-to-jpg`            | WebP, including animated                    |
-| `/avif-viewer`                            | The picture, its facts, its frames; save it |
-| `/what-is-avif`, `/how-to-open-avif-file` | Guides; the second embeds the viewer        |
-| `/about`, `/privacy`                      | What the site is, and what it can see       |
+| Route                                           |                                             |
+| ----------------------------------------------- | ------------------------------------------- |
+| `/`                                             | Hub: any supported image to PNG or JPG      |
+| `/avif-to-png`, `/avif-to-jpg`                  | AVIF, including animated, 10/12-bit and HDR |
+| `/avif-to-apng`                                 | Animated AVIF to one animated PNG           |
+| `/jfif-to-jpg`, `/jfif-to-png`                  | JFIF to JPG is a lossless rename by default |
+| `/webp-to-png`, `/webp-to-jpg`                  | WebP, including animated                    |
+| `/jpg-to-avif`, `/png-to-avif`, `/webp-to-avif` | Make AVIF: 8-bit sRGB, transparency kept    |
+| `/avif-viewer`                                  | The picture, its facts, its frames; save it |
+| `/what-is-avif`, `/how-to-open-avif-file`       | Guides; the second embeds the viewer        |
+| `/about`, `/privacy`                            | What the site is, and what it can see       |
 
 - Batches of 50 files, 50 MB each, downloadable as one ZIP
 - Animated input: one file per frame with a frame picker, or a single animated PNG
