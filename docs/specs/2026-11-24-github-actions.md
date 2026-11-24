@@ -14,8 +14,7 @@ listed under "Existing behaviour changed").
    `avifbox-extension-<version>.zip`, the content of `dist-extension/`, to a GitHub Release named by
    the tag.
 
-Out of scope: a run for pull requests or other branches (the owner pushes to `main` and opens none;
-the deploy run is the test run), the Chrome Web Store or any other store, a version for the site,
+Out of scope: a run for pull requests or other branches (see "Decisions"), the Chrome Web Store or any other store, a version for the site,
 caching Playwright's browsers, a required reviewer for deploys (a setting of the environment on
 GitHub, not of the repository: see "Decisions").
 
@@ -78,8 +77,9 @@ below.
 
 - **The run on GitHub is `pnpm run deploy`, not a copy of its steps in YAML.** The chain AC-47 reads
   stays in one place, and a deploy from a machine and one from GitHub do the same.
-- **No run for pull requests.** The owner pushes to `main`; a run for each push that deploys nothing
-  would test the same commit twice.
+- **No run for pull requests, for now.** Written on the premise that the owner pushes to `main` and
+  opens none, where the deploy run is the test run. Three pull requests were opened the same day
+  (#1…#3), so whether a pull request gets a run of the tests is an open question.
 - **The IndexNow note lives in GitHub's cache.** A runner starts empty, and a run tried again is a new
   runner, so the file alone would lose what a failed deploy owed: the next run would see a site that
   already serves the build. A cache entry cannot be replaced, so each run saves under a key of its own
@@ -125,3 +125,9 @@ IndexNow note in GitHub's cache, the token in the environment `production`. Whet
 for approval was asked and left open; it does not, as the question asked for a deploy by itself.
 
 ## Observed
+
+- 2026-11-24, AC-74, not met: commit `a9c2cff` pushed to `main`. GitHub registered both workflows
+  (`deploy` and `extension`, both "active") and started no run in five minutes. A start by hand was
+  refused: "HTTP 422: Actions has been disabled for this user." The repository allows Actions and all
+  actions; the block is on the account `nexuslaiban`, and only GitHub can lift it. No AC is observed
+  yet. The environment `production` exists, limited to `main`, with no secret.
