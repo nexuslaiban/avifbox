@@ -5,7 +5,7 @@
  * file free of imports.
  */
 export const GUIDE_DATES: Record<string, { published: string; updated: string }> = {
-  '/what-is-avif': { published: '2026-11-11', updated: '2026-11-11' },
+  '/what-is-avif': { published: '2026-11-11', updated: '2026-11-23' },
   '/how-to-open-avif-file': { published: '2026-11-11', updated: '2026-11-11' },
 };
 

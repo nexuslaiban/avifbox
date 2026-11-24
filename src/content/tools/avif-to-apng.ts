@@ -129,5 +129,5 @@ export const avifToApng: ToolPage = {
   input: 'AVIF — animated; a still AVIF becomes an ordinary PNG',
   output: 'Animated PNG (.png), truecolour with transparency',
   metadata: 'Not copied: the PNG holds pixels, plus a colour profile if you ask for one',
-  related: [RELATED.avifToPng, RELATED.avifToJpg, RELATED.whatIsAvif, RELATED.webpToPng],
+  related: [RELATED.avifToPng, RELATED.avifToJpg, RELATED.viewer, RELATED.whatIsAvif],
 };

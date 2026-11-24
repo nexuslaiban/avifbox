@@ -117,5 +117,5 @@ export const jfifToPng: ToolPage = {
   input: 'JFIF and any other JPEG file',
   output: 'PNG (Truecolor or Optimized)',
   metadata: 'Not copied: the PNG holds pixels, plus a colour profile if you ask for one',
-  related: [RELATED.jfifToJpg, RELATED.webpToPng, RELATED.avifToPng, RELATED.avifToJpg],
+  related: [RELATED.jfifToJpg, RELATED.webpToJpg, RELATED.avifToPng, RELATED.avifToJpg],
 };

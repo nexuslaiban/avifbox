@@ -138,5 +138,5 @@ export const avifToPng: ToolPage = {
   input: 'AVIF — 8, 10 and 12-bit, HDR, animated',
   output: 'PNG (Truecolor or Optimized), animated PNG',
   metadata: 'Not copied: the PNG holds pixels, plus a colour profile if you ask for one',
-  related: [RELATED.avifToJpg, RELATED.whatIsAvif, RELATED.openAvif, RELATED.webpToPng],
+  related: [RELATED.avifToJpg, RELATED.viewer, RELATED.whatIsAvif, RELATED.openAvif],
 };

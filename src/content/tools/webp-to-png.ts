@@ -133,5 +133,5 @@ export const webpToPng: ToolPage = {
   input: 'WebP — lossy, lossless, animated',
   output: 'PNG (Truecolor or Optimized), animated PNG',
   metadata: 'Not copied: the PNG holds pixels, plus a colour profile if you ask for one',
-  related: [RELATED.webpToJpg, RELATED.avifToPng, RELATED.jfifToPng, RELATED.whatIsAvif],
+  related: [RELATED.webpToJpg, RELATED.avifToPng, RELATED.jfifToJpg, RELATED.whatIsAvif],
 };
