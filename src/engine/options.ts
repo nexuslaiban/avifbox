@@ -5,7 +5,8 @@ export function defaultOptions(target: Target, animation: ConvertOptions['animat
   return {
     target,
     pngMode: 'truecolor',
-    quality: 90,
+    // AVIF's scale is not JPG's: 60 is where photos look like the original at a fraction of the size.
+    quality: target === 'avif' ? 60 : 90,
     background: null,
     animation,
     tone: 'brightness',

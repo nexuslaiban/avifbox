@@ -6,7 +6,7 @@ export { SITE } from './identity';
 export const LIMITS = `${MAX_FILES} files per batch, ${MAX_FILE_BYTES / (1024 * 1024)} MB each`;
 
 export const NAV = {
-  /** `group` is the source format; the header menu lists the converters under it. */
+  /** `group` is the source format, or the target for the converters that make AVIF; the header menu lists the converters under it. */
   converters: [
     { href: '/avif-to-png', label: 'AVIF to PNG', group: 'AVIF' },
     { href: '/avif-to-jpg', label: 'AVIF to JPG', group: 'AVIF' },
@@ -15,6 +15,9 @@ export const NAV = {
     { href: '/jfif-to-png', label: 'JFIF to PNG', group: 'JFIF' },
     { href: '/webp-to-png', label: 'WebP to PNG', group: 'WebP' },
     { href: '/webp-to-jpg', label: 'WebP to JPG', group: 'WebP' },
+    { href: '/jpg-to-avif', label: 'JPG to AVIF', group: 'To AVIF' },
+    { href: '/png-to-avif', label: 'PNG to AVIF', group: 'To AVIF' },
+    { href: '/webp-to-avif', label: 'WebP to AVIF', group: 'To AVIF' },
   ],
   viewer: { href: '/avif-viewer', label: 'AVIF viewer' },
   guides: [
@@ -76,6 +79,24 @@ export const RELATED = {
     href: '/webp-to-jpg',
     label: 'WebP to JPG',
     note: 'Small files for anything that refuses WebP.',
+    kind: 'Converter',
+  },
+  jpgToAvif: {
+    href: '/jpg-to-avif',
+    label: 'JPG to AVIF',
+    note: 'Photos about half the size, for a faster website.',
+    kind: 'Converter',
+  },
+  pngToAvif: {
+    href: '/png-to-avif',
+    label: 'PNG to AVIF',
+    note: 'Far smaller files that keep their transparency.',
+    kind: 'Converter',
+  },
+  webpToAvif: {
+    href: '/webp-to-avif',
+    label: 'WebP to AVIF',
+    note: 'The newer format, usually smaller again.',
     kind: 'Converter',
   },
   whatIsAvif: {

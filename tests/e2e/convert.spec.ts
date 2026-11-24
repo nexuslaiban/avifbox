@@ -431,3 +431,49 @@ test.describe('other tools', () => {
     expect(readJpeg(await downloadNamed(page, 'still.jpg')).width).toBe(64);
   });
 });
+
+test.describe('to AVIF', () => {
+  /** The size of an AVIF, decoded by the browser the test runs in. */
+  async function avifSize(page: import('@playwright/test').Page, bytes: Buffer): Promise<[number, number]> {
+    return page.evaluate(
+      async (data) => {
+        const bitmap = await createImageBitmap(new Blob([new Uint8Array(data)], { type: 'image/avif' }));
+        return [bitmap.width, bitmap.height] as [number, number];
+      },
+      [...bytes],
+    );
+  }
+
+  const isAvif = (bytes: Buffer) => bytes.subarray(4, 12).toString('latin1') === 'ftypavif';
+
+  test('AC-60 PNG to AVIF writes a real AVIF of the same size, and a lower quality makes it smaller', async ({
+    page,
+  }) => {
+    await page.goto('/png-to-avif');
+    await addFiles(page, 'still.png');
+    await settled(page, 1);
+    const preset = await downloadNamed(page, 'still.avif');
+    expect(isAvif(preset), 'ftyp brand').toBe(true);
+    expect(await avifSize(page, preset)).toEqual([64, 48]);
+
+    await setRange(page.getByRole('slider', { name: 'Quality' }), 10);
+    await settled(page, 1);
+    const low = await downloadNamed(page, 'still.avif');
+    expect(isAvif(low)).toBe(true);
+    expect(low.length).toBeLessThan(preset.length);
+  });
+
+  test('AC-61 JPG and WebP to AVIF write AVIF files named after the source', async ({ page }) => {
+    await page.goto('/jpg-to-avif');
+    await addFiles(page, 'photo.jfif');
+    await settled(page, 1);
+    const fromJpg = await downloadNamed(page, 'photo.avif');
+    expect(isAvif(fromJpg)).toBe(true);
+    expect(await avifSize(page, fromJpg)).toEqual([320, 240]);
+
+    await page.goto('/webp-to-avif');
+    await addFiles(page, 'lossless.webp');
+    await settled(page, 1);
+    expect(isAvif(await downloadNamed(page, 'lossless.avif'))).toBe(true);
+  });
+});

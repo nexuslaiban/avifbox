@@ -318,8 +318,51 @@ function Settings(props: {
   const relevant = hasAnimation || hasHdr || hasWideGamut;
 
   const isPng = options.target === 'png';
-  const keepChoice = !isPng && (props.props.offerKeepJpeg || hasJpegInput);
+  const isAvif = options.target === 'avif';
+  const keepChoice = options.target === 'jpg' && (props.props.offerKeepJpeg || hasJpegInput);
   const fill = options.background ?? '#ffffff';
+
+  const transparency = (
+    <fieldset class="cv-choice">
+      <legend>Transparency</legend>
+      <div class="cv-inline">
+        <label>
+          <input
+            type="checkbox"
+            checked={options.background !== null}
+            onChange={(event) => onChange({ background: event.currentTarget.checked ? fill : null })}
+          />
+          <span>Fill transparent areas</span>
+        </label>
+        <label class="cv-colour">
+          <span class="sr-only">Background colour</span>
+          <input
+            type="color"
+            value={fill}
+            disabled={options.background === null}
+            onChange={(event) => onChange({ background: event.currentTarget.value })}
+          />
+        </label>
+      </div>
+      <small>Off keeps the alpha channel as it is.</small>
+    </fieldset>
+  );
+
+  const qualitySlider = (
+    <div class="cv-inline">
+      <label for={`${id}-quality`}>Quality</label>
+      <input
+        id={`${id}-quality`}
+        type="range"
+        min="1"
+        max="100"
+        value={quality}
+        onInput={(event) => setQuality(Number(event.currentTarget.value))}
+        onChange={(event) => onChange({ quality: Number(event.currentTarget.value) })}
+      />
+      <output for={`${id}-quality`}>{quality}</output>
+    </div>
+  );
 
   return (
     <form class="cv-settings" aria-label="Output settings" onSubmit={(event) => event.preventDefault()}>
@@ -347,29 +390,18 @@ function Settings(props: {
               ]}
               onChange={(pngMode) => onChange({ pngMode })}
             />
+            {transparency}
+          </>
+        ) : isAvif ? (
+          <>
             <fieldset class="cv-choice">
-              <legend>Transparency</legend>
-              <div class="cv-inline">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={options.background !== null}
-                    onChange={(event) => onChange({ background: event.currentTarget.checked ? fill : null })}
-                  />
-                  <span>Fill transparent areas</span>
-                </label>
-                <label class="cv-colour">
-                  <span class="sr-only">Background colour</span>
-                  <input
-                    type="color"
-                    value={fill}
-                    disabled={options.background === null}
-                    onChange={(event) => onChange({ background: event.currentTarget.value })}
-                  />
-                </label>
-              </div>
-              <small>Off keeps the alpha channel as it is.</small>
+              <legend>AVIF output</legend>
+              {qualitySlider}
+              <small>
+                AVIF’s scale is not JPG’s: 60 suits most photos. The first file loads the encoder (3.5 MB) once.
+              </small>
             </fieldset>
+            {transparency}
           </>
         ) : (
           <>
@@ -386,19 +418,7 @@ function Settings(props: {
             )}
             <fieldset class="cv-choice">
               <legend>JPG output</legend>
-              <div class="cv-inline">
-                <label for={`${id}-quality`}>Quality</label>
-                <input
-                  id={`${id}-quality`}
-                  type="range"
-                  min="1"
-                  max="100"
-                  value={quality}
-                  onInput={(event) => setQuality(Number(event.currentTarget.value))}
-                  onChange={(event) => onChange({ quality: Number(event.currentTarget.value) })}
-                />
-                <output for={`${id}-quality`}>{quality}</output>
-              </div>
+              {qualitySlider}
               <div class="cv-inline">
                 <label class="cv-colour">
                   <span>Background colour</span>
@@ -439,7 +459,11 @@ function Settings(props: {
           ) : (
             <fieldset class="cv-choice">
               <legend>Animated images</legend>
-              <p class="cv-note">JPG cannot move: each frame becomes its own file, and you pick the ones to keep.</p>
+              <p class="cv-note">
+                {isAvif
+                  ? 'AVIF output here is a still image: each frame becomes its own file, and you pick the ones to keep.'
+                  : 'JPG cannot move: each frame becomes its own file, and you pick the ones to keep.'}
+              </p>
             </fieldset>
           )}
           <Choice
@@ -459,11 +483,13 @@ function Settings(props: {
               { value: 'display-p3', label: 'Display P3', hint: 'Keeps wide-gamut colour; profile is embedded.' },
             ]}
             onChange={(gamut) => onChange({ gamut })}
-            disabled={capabilities !== null && !capabilities.p3}
+            disabled={isAvif || (capabilities !== null && !capabilities.p3)}
             note={
-              capabilities && !capabilities.p3
-                ? 'This browser cannot read images in Display P3, so output is sRGB.'
-                : undefined
+              isAvif
+                ? 'AVIF output is written in sRGB.'
+                : capabilities && !capabilities.p3
+                  ? 'This browser cannot read images in Display P3, so output is sRGB.'
+                  : undefined
             }
           />
         </div>

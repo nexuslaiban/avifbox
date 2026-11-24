@@ -27,6 +27,9 @@ const TOOLS = [
   '/jfif-to-png',
   '/webp-to-png',
   '/webp-to-jpg',
+  '/jpg-to-avif',
+  '/png-to-avif',
+  '/webp-to-avif',
 ];
 const VIEWER = '/avif-viewer';
 const GUIDES = ['/what-is-avif', '/how-to-open-avif-file'];
@@ -199,7 +202,8 @@ test.describe('site structure', () => {
 
     const words = await bodyWords(page);
     expect(words, 'home page body copy').toBeGreaterThanOrEqual(500);
-    expect(words, 'home page body copy').toBeLessThanOrEqual(900);
+    // Every converter has a card and a table row here; ten converters need more room than seven.
+    expect(words, 'home page body copy').toBeLessThanOrEqual(1000);
   });
 
   test('AC-38 the viewer page carries free-application and FAQ data, 500–900 words, and links onward', async ({
@@ -270,6 +274,9 @@ test.describe('site structure', () => {
       '/jfif-to-jpg': ['/jfif-to-png'],
       '/webp-to-png': ['/avif-to-png', '/webp-to-jpg'],
       '/webp-to-jpg': ['/webp-to-png'],
+      '/jpg-to-avif': ['/png-to-avif', '/avif-to-jpg'],
+      '/png-to-avif': ['/jpg-to-avif', '/avif-to-png'],
+      '/webp-to-avif': ['/jpg-to-avif', '/png-to-avif'],
       '/avif-to-apng': ['/avif-to-png'],
       '/avif-viewer': ['/avif-to-png', '/avif-to-jpg', '/how-to-open-avif-file'],
       '/what-is-avif': ['/avif-to-png', '/avif-to-jpg'],
@@ -385,10 +392,17 @@ test.describe('header menu', () => {
     await converters.locator('summary').click();
     await expect(converters).toHaveJSProperty('open', true);
     let grouped = 0;
-    for (const group of ['AVIF', 'JFIF', 'WebP']) {
+    // Converters are grouped by source format, except those that make AVIF, which are grouped by target.
+    const groups: [string, RegExp][] = [
+      ['AVIF', /^AVIF /],
+      ['JFIF', /^JFIF /],
+      ['WebP', /^WebP /],
+      ['To AVIF', / to AVIF$/],
+    ];
+    for (const [group, pattern] of groups) {
       const links = converters.getByRole('list', { name: group, exact: true }).getByRole('link');
       await expect(links.first(), group).toBeVisible();
-      for (const label of await links.allTextContents()) expect(label.trim(), group).toMatch(new RegExp(`^${group} `));
+      for (const label of await links.allTextContents()) expect(label.trim(), group).toMatch(pattern);
       grouped += await links.count();
     }
     expect(grouped, 'converters under a format heading').toBe(TOOLS.length);

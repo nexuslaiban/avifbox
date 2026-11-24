@@ -15,7 +15,7 @@ interface Props {
 // A header menu: a button, and under it its links. <details> opens and closes without script.
 const { label, groups, path } = Astro.props;
 const holdsPage = groups.some((group) => group.links.some((link) => link.href === path));
-const id = (title: string) => `menu-${title.toLowerCase()}`;
+const id = (title: string) => `menu-${title.toLowerCase().replace(/\s+/g, '-')}`;
 ---
 
 <details name="site-menu" data-current={holdsPage ? '' : undefined}>

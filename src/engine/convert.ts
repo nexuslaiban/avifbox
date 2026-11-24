@@ -1,6 +1,7 @@
 import { ConvertError } from './errors';
 import { srgbToDisplayP3 } from './hdr';
 import { displayP3Profile } from './icc';
+import { encodeAvif } from './avif';
 import { encodeJpeg } from './jpeg';
 import { openImage, type Decoders } from './open';
 import { flatten, parseHex } from './pixels';
@@ -28,6 +29,8 @@ export async function* convert(file: Blob, options: ConvertOptions, decoders: De
     return;
   }
 
+  // The AVIF encoder writes 8-bit sRGB with no profile, so the pixels are read in sRGB for it.
+  if (options.target === 'avif') options = { ...options, gamut: 'srgb' };
   const source = await openImage(bytes, info, options, decoders);
   const { width, height, frameCount } = source;
   yield { type: 'info', info, frameCount, width, height, toneMapped: source.toneMapped };
@@ -51,7 +54,9 @@ export async function* convert(file: Blob, options: ConvertOptions, decoders: De
       const blob =
         options.target === 'png'
           ? await encodePng(frame.rgba, width, height, { mode: options.pngMode, icc })
-          : await encodeJpeg(frame.rgba, width, height, options.quality, icc);
+          : options.target === 'avif'
+            ? await encodeAvif(frame.rgba, width, height, options.quality)
+            : await encodeJpeg(frame.rgba, width, height, options.quality, icc);
       yield { type: 'output', output: { blob, width, height, frame: frameCount > 1 ? index : null } };
     }
     index++;

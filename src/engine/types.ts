@@ -1,5 +1,5 @@
 export type Format = 'avif' | 'webp' | 'jpeg' | 'png';
-export type Target = 'png' | 'jpg';
+export type Target = 'png' | 'jpg' | 'avif';
 export type Gamut = 'srgb' | 'display-p3';
 export type ToneMode = 'brightness' | 'colour';
 export type Pixels = Uint8Array | Uint8ClampedArray;
@@ -44,11 +44,11 @@ export interface ConvertOptions {
   target: Target;
   /** PNG: `truecolor` is lossless, `optimized` reduces to a palette of at most 256 colours. */
   pngMode: 'truecolor' | 'optimized';
-  /** JPG quality, 1–100. */
+  /** JPG or AVIF quality, 1–100. The two scales differ: AVIF at 60 looks about like JPG at 90. */
   quality: number;
-  /** `#rrggbb` to flatten transparency onto, or null to keep it. JPG always flattens (white if null). */
+  /** `#rrggbb` to flatten transparency onto, or null to keep it. JPG always flattens (white if null); PNG and AVIF keep alpha. */
   background: string | null;
-  /** Animated input: one file per frame, or a single animated PNG (PNG target only). */
+  /** Animated input: one file per frame, or a single animated PNG (PNG target only). AVIF output is always per frame. */
   animation: 'frames' | 'apng';
   tone: ToneMode;
   gamut: Gamut;

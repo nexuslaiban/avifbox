@@ -24,6 +24,9 @@ const blurbs: Record<string, string> = {
   'jfif-to-png': 'JFIF to PNG for editing and for tools that only take PNG.',
   'webp-to-png': 'WebP to PNG with transparency kept; animated WebP split into frames.',
   'webp-to-jpg': 'WebP to JPG for the apps and upload forms that still refuse WebP.',
+  'jpg-to-avif': 'Make AVIF: photos about half the size, for a faster website.',
+  'png-to-avif': 'Make AVIF from PNG: far smaller, transparency kept.',
+  'webp-to-avif': 'Make AVIF from WebP: the newer format, usually smaller again.',
 };
 
 /** What survives each conversion: quality, transparency, animation. */
@@ -35,6 +38,9 @@ const keeps: Record<string, [string, string, string]> = {
   'jfif-to-png': ['Lossless', 'JPEG has none', 'JPEG has none'],
   'webp-to-png': ['Lossless', 'Kept', 'Every frame, or one animated PNG'],
   'webp-to-jpg': ['Lossy, quality 1–100', 'Filled with a colour you choose', 'One JPG per frame'],
+  'jpg-to-avif': ['Lossy, quality 1–100', 'JPEG has none', 'JPEG has none'],
+  'png-to-avif': ['Lossy, quality 1–100', 'Kept', 'One AVIF per frame'],
+  'webp-to-avif': ['Lossy, quality 1–100', 'Kept', 'One AVIF per frame'],
 };
 
 const steps: Step[] = [
