@@ -23,3 +23,8 @@ their body. This change adds links in context, where a reader would want them, w
 
 No route, title, description or structured-data shape changes. The home and guide FAQ data still
 match the visible FAQ (AC-32). Tool pages stay within 900–1,300 words (AC-23).
+
+## Observed
+
+- 2026-11-24: deployed with `pnpm run deploy` from commit `bc46375`, together with the converters
+  that make AVIF; the record of that deploy is in `2026-11-23-to-avif.md`.

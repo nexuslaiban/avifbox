@@ -24,3 +24,8 @@ real captures from each system).
 
 Section numbers on the guide shift by one. Article `dateModified` and the sitemap `lastmod` follow the
 new date (AC-31). No new external link that is not in `src/content/sources.ts` (AC-30).
+
+## Observed
+
+- 2026-11-24: deployed with `pnpm run deploy` from commit `bc46375`, together with the converters
+  that make AVIF; the record of that deploy is in `2026-11-23-to-avif.md`.
