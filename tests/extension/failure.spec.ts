@@ -1,5 +1,21 @@
 import AxeBuilder from '@axe-core/playwright';
+import type { Page } from '@playwright/test';
 import { expect, test } from './fixture';
+
+/**
+ * Does what should close the window, and waits until it has. The window can be gone before Playwright has
+ * finished the click or the key press, which it reports as a failure of that action: here it is the action
+ * working. Any other failure stands.
+ */
+async function closes(window: Page, act: () => Promise<unknown>): Promise<void> {
+  const closed = window.waitForEvent('close');
+  await Promise.all([
+    closed,
+    act().catch((error: unknown) => {
+      if (!window.isClosed()) throw error;
+    }),
+  ]);
+}
 
 const UNREACHABLE =
   'Could not fetch this image. The site may have refused the request, the image may exist only inside the page, ' +
@@ -47,21 +63,20 @@ test('AC-70 the failure window says what happened and what can still be done', a
   await expect(close).toHaveAccessibleDescription('Could not fetch this image: the site answered 404.');
   expect((await new AxeBuilder({ page: window }).analyze()).violations).toEqual([]);
 
-  await Promise.all([window.waitForEvent('close'), close.click()]);
+  await closes(window, () => close.click());
 });
 
 test('AC-70 the Escape key closes the failure window', async ({ extension }) => {
   const window = await extension.failure('png', extension.at('/missing.avif'));
   await expect(window.getByRole('button', { name: 'Close', exact: true })).toBeFocused();
-  // The window is gone before the key is let go, which Playwright reports as a failure of the key press.
-  await Promise.all([window.waitForEvent('close'), window.keyboard.press('Escape').catch(() => {})]);
+  await closes(window, () => window.keyboard.press('Escape'));
 });
 
 test('AC-70 a window opened with a fragment that cannot be decoded still closes', async ({ extension }) => {
   const window = await extension.context.newPage();
   await window.goto(new URL('notice.html#%E0%A4%A', (await extension.worker()).url()).href);
   await expect(window.locator('#failure')).toHaveText('');
-  await Promise.all([window.waitForEvent('close'), window.getByRole('button', { name: 'Close' }).click()]);
+  await closes(window, () => window.getByRole('button', { name: 'Close' }).click());
 });
 
 test('AC-70 the longest failure fits the window, with room for a title bar', async ({ extension }) => {
