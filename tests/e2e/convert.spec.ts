@@ -446,7 +446,7 @@ test.describe('to AVIF', () => {
 
   const isAvif = (bytes: Buffer) => bytes.subarray(4, 12).toString('latin1') === 'ftypavif';
 
-  test('AC-60 PNG to AVIF writes a real AVIF of the same size, and a lower quality makes it smaller', async ({
+  test('AC-81 PNG to AVIF writes a real AVIF of the same size, and a lower quality makes it smaller', async ({
     page,
   }) => {
     await page.goto('/png-to-avif');
@@ -463,7 +463,7 @@ test.describe('to AVIF', () => {
     expect(low.length).toBeLessThan(preset.length);
   });
 
-  test('AC-61 JPG and WebP to AVIF write AVIF files named after the source', async ({ page }) => {
+  test('AC-82 JPG and WebP to AVIF write AVIF files named after the source', async ({ page }) => {
     await page.goto('/jpg-to-avif');
     await addFiles(page, 'photo.jfif');
     await settled(page, 1);
